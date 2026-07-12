@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  :root{
+    --bg:#ffffff; --text:#0b0d12; --muted:#6b7280; --faint:#9ca3af;
+    --line:#ececf0; --field:#f7f7f9; --field-line:#e4e4e9;
+    --accent:#111318; --ring:rgba(17,19,24,.08);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:-apple-system,"PingFang SC","Segoe UI",sans-serif;
+    width:312px;background:var(--bg);color:var(--text);
+    font-feature-settings:"cv11","ss01";-webkit-font-smoothing:antialiased}
+
+  .wrap{padding:22px}
+
+  /* 头部：小标 + 标题，无框无光 */
+  .brand{display:flex;align-items:baseline;gap:9px;margin-bottom:24px}
+  .brand b{font-size:16px;font-weight:650;letter-spacing:-.3px}
+  .ver{font-size:11px;font-weight:550;color:var(--faint);
+    background:var(--field);border:1px solid var(--field-line);
+    border-radius:6px;padding:2px 6px;letter-spacing:.2px}
+
+  .field{margin-bottom:18px}
+  label{display:block;font-size:12.5px;font-weight:550;color:var(--text);margin:0 0 8px}
+
+  select,input{width:100%;border:1px solid var(--field-line);border-radius:10px;
+    padding:0 13px;height:40px;font-size:13.5px;background:var(--field);color:var(--text);
+    font-family:inherit;transition:border-color .15s, box-shadow .15s, background .15s}
+  select:hover,input:hover{border-color:#d6d6dd}
+  select:focus,input:focus{outline:none;border-color:var(--accent);background:#fff;
+    box-shadow:0 0 0 3px var(--ring)}
+  input::placeholder{color:var(--faint)}
+  select{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:36px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+    background-repeat:no-repeat;background-position:right 12px center}
+
+  .hint{margin-top:9px}
+  .hint a{color:var(--muted);text-decoration:none;font-size:12px;
+    border-bottom:1px solid var(--line);padding-bottom:1px;transition:color .15s,border-color .15s}
+  .hint a:hover{color:var(--text);border-color:var(--faint)}
+
+  .save{width:100%;height:42px;color:#fff;border:none;border-radius:10px;
+    font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;
+    background:var(--accent);transition:opacity .15s,transform .1s;margin-top:2px}
+  .save:hover{opacity:.88}
+  .save:active{transform:scale(.99)}
+  .ok{color:#16a34a;font-size:12px;text-align:center;height:15px;margin-top:11px;
+    font-weight:550;opacity:0;transition:opacity .2s}
+  .ok.show{opacity:1}
+
+  .foot{display:flex;align-items:center;justify-content:space-between;
+    padding:14px 22px;border-top:1px solid var(--line)}
+  .foot>span{font-size:11.5px;color:var(--faint)}
+  .foot-links{display:flex;gap:2px}
+  .foot-links a{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;
+    justify-content:center;color:var(--faint);transition:.15s;text-decoration:none}
+  .foot-links a:hover{color:var(--text);background:var(--field)}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">
+      <b>Quip</b>
+      <span class="ver">v0.1.0</span>
+    </div>
+
+    <div class="field">
+      <label>模型</label>
+      <select id="provider">
+        <option value="deepseek">DeepSeek</option>
+        <option value="openai">OpenAI</option>
+        <option value="grok">Grok</option>
+        <option value="claude">Claude</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label id="keyLabel">API Key</label>
+      <input id="key" type="password" placeholder="填入 key">
+      <div class="hint" id="hint"></div>
+    </div>
+
+    <button class="save" id="save">保存</button>
+    <div class="ok" id="ok"></div>
+  </div>
+
+  <div class="foot">
+    <span>by orion</span>
+    <div class="foot-links">
+      <a href="https://github.com/huccct" target="_blank" title="GitHub">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12c0 4.42 2.87 8.17 6.84 9.5.5.09.68-.22.68-.48 0-.24-.01-.87-.01-1.7-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02.8-.22 1.65-.33 2.5-.33.85 0 1.7.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85 0 1.34-.01 2.42-.01 2.75 0 .27.18.58.69.48A10.01 10.01 0 0022 12c0-5.52-4.48-10-10-10z"/></svg>
+      </a>
+      <a href="https://x.com/orion_c29" target="_blank" title="X / Twitter">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.24 2H21.5l-7.13 8.15L22.75 22h-6.63l-5.2-6.8L4.97 22H1.7l7.62-8.71L1.25 2h6.79l4.7 6.22L18.24 2zm-1.16 18h1.83L7.03 3.9H5.06L17.08 20z"/></svg>
+      </a>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
