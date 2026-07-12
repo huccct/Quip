@@ -4,3 +4,4 @@
 .env.*
 *.key
 node_modules/
+.vercel
