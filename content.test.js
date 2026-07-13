@@ -83,6 +83,9 @@ test('applies the selected reply style', async () => {
   assert.match(requests[0].body.messages[0].content, /不猜动机、背景、因果、结果或未展示的细节/);
   assert.match(requests[0].body.messages[0].content, /作者此刻是在分享、吐槽、自嘲、炫耀、求助、提问、宣布还是抛梗/);
   assert.match(requests[0].body.messages[0].content, /笑点必须来自原文，不能贴现成梗/);
+  assert.match(requests[0].body.messages[0].content, /放到很多别的推文下面也成立：太泛，淘汰/);
+  assert.match(requests[0].body.messages[0].content, /我反正、我一直、我也经历过/);
+  assert.match(requests[0].body.messages[0].content, /两小时成功预约了下一个两小时/);
   assert.match(requests[0].body.messages[0].content, /不要以“确实”“真的”“不得不说”/);
   assert.match(requests[0].body.messages[0].content, /中文优先 8–28 字、不得超过 40 字/);
 });
