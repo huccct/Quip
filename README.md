@@ -18,10 +18,11 @@ Understands text, images, and quoted posts · Four reply styles · Multiple AI p
 
 Asking AI to “write a polite reply” often produces something correct but not worth posting.
 
-Quip uses a **writer × editor review flow**: it drafts several angles internally, rejects misreadings, filler, clichés, and forced jokes, then returns one natural reply.
+Quip first identifies what the author is doing—sharing, venting, joking, asking, or announcing—then finds a concrete detail or subtext to respond to. Its **writer × editor review flow** rejects generic agreement, misreadings, filler, and forced jokes before returning one natural reply.
 
 ## Features
 
+- **Understands the point** — responds to a concrete detail, implication, contrast, or callback instead of paraphrasing the post
 - **Context-aware** — witty when appropriate, sincere or useful when the post is serious
 - **Four styles** — Adaptive, Funny, Warm, and Sharp
 - **Personal voice** — add a short profile or a few example replies to guide wording and perspective

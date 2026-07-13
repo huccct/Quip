@@ -76,11 +76,14 @@ test('uses non-reasoning defaults for DeepSeek and Grok', async () => {
 test('applies the selected reply style', async () => {
   const requests = [];
   await load('openai', requests, undefined, 'sharp', 'Indie developer; direct and calm')('tweet', []);
-  assert.match(requests[0].body.messages[0].content, /优先简洁犀利、观点鲜明/);
+  assert.match(requests[0].body.messages[0].content, /点出原文真正的矛盾、代价或反差/);
   assert.match(requests[0].body.messages[0].content, /Indie developer; direct and calm/);
   assert.match(requests[0].body.messages[0].content, /不是 AI 助手、客服、主持人、旁观评论员或原推作者/);
   assert.match(requests[0].body.messages[0].content, /不要声称用户有某段经历、职业、关系、产品或立场/);
   assert.match(requests[0].body.messages[0].content, /不猜动机、背景、因果、结果或未展示的细节/);
+  assert.match(requests[0].body.messages[0].content, /作者此刻是在分享、吐槽、自嘲、炫耀、求助、提问、宣布还是抛梗/);
+  assert.match(requests[0].body.messages[0].content, /笑点必须来自原文，不能贴现成梗/);
+  assert.match(requests[0].body.messages[0].content, /不要以“确实”“真的”“不得不说”/);
   assert.match(requests[0].body.messages[0].content, /中文优先 8–28 字、不得超过 40 字/);
 });
 
