@@ -17,6 +17,21 @@ function findTweetText() {
   return textEl ? textEl.innerText.trim() : '';
 }
 
+// ---- 找被回复推文里的图片 URL（pbs.twimg.com CDN，公开可直传给 vision 模型）----
+// 只取正文配图（tweetPhoto 里的 img），排除头像/emoji。取原图尺寸（name=small→large）。
+function findTweetImages() {
+  const article = document.querySelector('article[data-testid="tweet"]');
+  if (!article) return [];
+  const imgs = article.querySelectorAll('div[data-testid="tweetPhoto"] img[src*="pbs.twimg.com/media/"]');
+  const urls = [];
+  imgs.forEach((img) => {
+    // 把缩略图参数换成较大尺寸，识别更准
+    const url = img.src.replace(/&name=\w+/, '&name=large');
+    if (!urls.includes(url)) urls.push(url);
+  });
+  return urls.slice(0, 4); // 最多 4 张，够用且省 token
+}
+
 // ---- 关键：把文字真正写进 X 的富文本编辑器 ----
 // X 现在用 Lexical/DraftJS，execCommand('insertText') 只画在表层、不触发 React state，
 // 所以 placeholder 不消失、Reply 不亮。可靠做法是模拟一次“粘贴”，编辑器有 paste 监听。
@@ -45,12 +60,14 @@ async function insertText(composer, text) {
   }));
 }
 
-// ---- 支持的模型商（OpenAI 兼容接口，统一处理）----
+// ---- 支持的模型商 ----
+// vision=能否读图：DeepSeek 的托管 API 不接受图片输入（其 VL 模型只开源权重，不上 API），其余三家可读图。
+// model 是默认模型，用户可在 popup 里填「高级：模型名」覆盖。
 const PROVIDERS = {
-  deepseek: { url: 'https://api.deepseek.com/chat/completions', model: 'deepseek-chat', name: 'DeepSeek' },
-  openai:   { url: 'https://api.openai.com/v1/chat/completions', model: 'gpt-4o',       name: 'OpenAI' },
-  grok:     { url: 'https://api.x.ai/v1/chat/completions',       model: 'grok-4.5',     name: 'Grok' },
-  claude:   { url: 'https://api.anthropic.com/v1/messages',      model: 'claude-opus-4-8', name: 'Claude' },
+  deepseek: { url: 'https://api.deepseek.com/chat/completions', model: 'deepseek-chat',   name: 'DeepSeek', vision: false },
+  openai:   { url: 'https://api.openai.com/v1/chat/completions', model: 'gpt-4o',          name: 'OpenAI',   vision: true  },
+  grok:     { url: 'https://api.x.ai/v1/chat/completions',       model: 'grok-4.5',        name: 'Grok',     vision: true  },
+  claude:   { url: 'https://api.anthropic.com/v1/messages',      model: 'claude-opus-4-8', name: 'Claude',   vision: true  },
 };
 
 // 读取当前选定的模型商 + 对应 key
@@ -60,26 +77,38 @@ function getConfig() {
       reject(new Error('插件上下文已失效（多半是刚重载过扩展）。请刷新这个 X 页面(F5)再试。'));
       return;
     }
-    chrome.storage.local.get(['provider', 'apiKeys'], (r) => {
+    chrome.storage.local.get(['provider', 'apiKeys', 'readImages', 'modelOverride'], (r) => {
       if (chrome.runtime && chrome.runtime.lastError) {
         reject(new Error(chrome.runtime.lastError.message + '（请刷新页面 F5 再试）'));
         return;
       }
       const provider = r.provider || 'deepseek';
       const key = (r.apiKeys || {})[provider] || '';
-      resolve({ provider, key });
+      const readImages = !!r.readImages;
+      const modelOverride = ((r.modelOverride || {})[provider] || '').trim();
+      resolve({ provider, key, readImages, modelOverride });
     });
   });
 }
 
 // ---- 调模型 ----
-async function generateReply(tweetText) {
-  const { provider, key } = await getConfig();
+async function generateReply(tweetText, images) {
+  const { provider, key, readImages, modelOverride } = await getConfig();
   const cfg = PROVIDERS[provider];
   if (!key) {
     alert(`还没设置 ${cfg.name} key。点浏览器右上角插件图标填一下。`);
     return null;
   }
+
+  // 是否真的要带图：开关开着、推文有图、且当前模型能读图。
+  const wantImages = readImages && images && images.length > 0;
+  if (wantImages && !cfg.vision) {
+    // Fail loud：不静默丢图假装读了。明确告诉用户换模型或关开关。
+    alert(`${cfg.name} 读不了图。请在插件里换成 OpenAI / Grok / Claude，或关掉「读取推文图片」。`);
+    return null;
+  }
+  const useImages = wantImages && cfg.vision;
+  const model = modelOverride || cfg.model;
 
   // 语言硬规则：原推是什么语言就用什么语言回（中/英/日/韩/西…全部适用）。
   // 写得够硬，压过"整段 prompt 都是中文所以默认回中文"的干扰。
@@ -113,13 +142,20 @@ async function generateReply(tweetText) {
 - 宁可平实有记忆点，也不要尬。
 
 只输出第三步这一行回复正文。不要引号、不要解释、不要显示前两步、不要给多个选项。
-${langRule}
+${useImages ? '这条推带了图，图往往是笑点/信息的核心，务必先看懂图再回，可以直接接图里的梗。\n' : ''}${langRule}
 
 这条推：${tweetText}`;
 
   // Claude 用 Anthropic 独有的接口格式；其余走 OpenAI 兼容格式
   let res;
   if (provider === 'claude') {
+    // Claude：图片是 content block（type:image + source:url），排在文字前。
+    const content = useImages
+      ? [
+          ...images.map((u) => ({ type: 'image', source: { type: 'url', url: u } })),
+          { type: 'text', text: prompt },
+        ]
+      : prompt;
     res = await fetch(cfg.url, {
       method: 'POST',
       headers: {
@@ -129,12 +165,19 @@ ${langRule}
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: cfg.model,
+        model,
         max_tokens: 200,
-        messages: [{ role: 'user', content: prompt }]
+        messages: [{ role: 'user', content }]
       })
     });
   } else {
+    // OpenAI / Grok：图片是 content 数组里的 image_url 项。
+    const content = useImages
+      ? [
+          { type: 'text', text: prompt },
+          ...images.map((u) => ({ type: 'image_url', image_url: { url: u } })),
+        ]
+      : prompt;
     res = await fetch(cfg.url, {
       method: 'POST',
       headers: {
@@ -142,8 +185,8 @@ ${langRule}
         'Authorization': `Bearer ${key}`
       },
       body: JSON.stringify({
-        model: cfg.model,
-        messages: [{ role: 'user', content: prompt }],
+        model,
+        messages: [{ role: 'user', content }],
         temperature: 0.9,
         max_tokens: 200
       })
@@ -207,7 +250,9 @@ function injectInlineButton() {
     e.preventDefault();
     e.stopPropagation();
     const tweetText = findTweetText();
-    if (!tweetText) { alert('没读到被回复的推文内容。'); return; }
+    const images = findTweetImages();
+    // 纯图无字的推也该能回，所以只要「有字」或「有图」其一即可
+    if (!tweetText && images.length === 0) { alert('没读到被回复的推文内容。'); return; }
     const live = findComposer();
     if (!live) { alert('没找到回复框。'); return; }
 
@@ -217,7 +262,7 @@ function injectInlineButton() {
     const svg = btn.querySelector('svg');
     if (svg) { svg.style.transition = 'transform .8s linear'; svg.style.animation = 'xqr-spin 1s linear infinite'; }
     try {
-      const reply = await generateReply(tweetText);
+      const reply = await generateReply(tweetText, images);
       if (reply) await insertText(live, reply);
     } catch (err) {
       alert('出错了：' + err.message);

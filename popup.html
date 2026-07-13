@@ -42,6 +42,26 @@
     border-bottom:1px solid var(--line);padding-bottom:1px;transition:color .15s,border-color .15s}
   .hint a:hover{color:var(--text);border-color:var(--faint)}
 
+  /* 读图开关行 */
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;
+    gap:12px;padding:12px 13px;margin-bottom:18px;
+    border:1px solid var(--field-line);border-radius:10px;background:var(--field)}
+  .toggle-txt{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .toggle-title{font-size:12.5px;font-weight:550;color:var(--text)}
+  .toggle-sub{font-size:11px;color:var(--faint)}
+  .switch{flex:0 0 auto;width:38px;height:22px;border-radius:100px;border:none;
+    background:#d6d6dd;padding:0;position:relative;cursor:pointer;transition:background .18s}
+  .switch .knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .18s}
+  .switch[aria-checked="true"]{background:var(--blue,#1d9bf0)}
+  .switch[aria-checked="true"] .knob{transform:translateX(16px)}
+  .switch:disabled{opacity:.4;cursor:not-allowed}
+
+  /* 高级：模型名 */
+  .adv-tag{font-weight:500;color:var(--faint);font-size:10.5px;
+    background:var(--field);border:1px solid var(--field-line);border-radius:5px;padding:1px 5px;margin-left:4px}
+  .adv-hint{font-size:11px;color:var(--faint);margin-top:7px}
+
   .save{width:100%;height:42px;color:#fff;border:none;border-radius:10px;
     font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;
     background:var(--accent);transition:opacity .15s,transform .1s;margin-top:2px}
@@ -81,6 +101,20 @@
       <label id="keyLabel">API Key</label>
       <input id="key" type="password" placeholder="填入 key">
       <div class="hint" id="hint"></div>
+    </div>
+
+    <div class="toggle-row">
+      <div class="toggle-txt">
+        <span class="toggle-title">读取推文图片</span>
+        <span class="toggle-sub" id="visionSub">让模型看懂配图再回</span>
+      </div>
+      <button type="button" class="switch" id="visionSwitch" role="switch" aria-checked="false"><span class="knob"></span></button>
+    </div>
+
+    <div class="field adv">
+      <label>模型名 <span class="adv-tag">高级 · 可留空</span></label>
+      <input id="model" type="text" placeholder="默认模型">
+      <div class="hint adv-hint" id="modelHint">留空用默认，填了就覆盖（如 gpt-4o-mini）</div>
     </div>
 
     <button class="save" id="save">保存</button>
