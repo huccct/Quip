@@ -7,6 +7,7 @@
 - Identify whether the author is sharing, venting, joking, asking, or announcing before drafting a reply.
 - Anchor replies to a concrete detail, implication, contrast, or callback from the post.
 - Give each reply style a distinct writing strategy and reject generic AI agreement phrases.
+- Reject replies that are reusable across unrelated posts, speculate beyond the source, or explain their own joke.
 
 ## 0.2.2 — 2026-07-13
 
