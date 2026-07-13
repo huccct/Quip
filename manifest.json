@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Quip · 一键妙回复",
   "version": "0.1.0",
-  "description": "在任意推文下一键生成有梗、像真人的回复，填进回复框，你手点发。了解更多见主页。",
+  "description": "在任意推文下一键生成贴合语境、像真人的回复，填进回复框，由你确认发送。",
   "homepage_url": "https://quip-hucccts-projects.vercel.app",
   "permissions": ["storage", "clipboardWrite"],
   "host_permissions": [

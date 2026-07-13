@@ -1,29 +1,35 @@
 // vision：能否读图，与 content.js 的 PROVIDERS 保持一致（DeepSeek 托管 API 不支持）。
 const META = {
-  deepseek: { name: 'DeepSeek', keys: 'https://platform.deepseek.com/api_keys',          model: 'deepseek-chat',   vision: false },
-  openai:   { name: 'OpenAI',   keys: 'https://platform.openai.com/api-keys',            model: 'gpt-4o',          vision: true  },
-  grok:     { name: 'Grok',     keys: 'https://console.x.ai',                            model: 'grok-4.5',        vision: true  },
-  claude:   { name: 'Claude',   keys: 'https://console.anthropic.com/settings/keys',     model: 'claude-opus-4-8', vision: true  },
+  deepseek: { name: 'DeepSeek', keys: 'https://platform.deepseek.com/api_keys',          model: 'deepseek-v4-flash', vision: false },
+  openai:   { name: 'OpenAI',   keys: 'https://platform.openai.com/api-keys',            model: 'gpt-5.6-luna',                 vision: true },
+  grok:     { name: 'Grok',     keys: 'https://console.x.ai',                            model: 'grok-4.3',                     vision: true },
+  claude:   { name: 'Claude',   keys: 'https://console.anthropic.com/settings/keys',     model: 'claude-sonnet-5',              vision: true },
 };
 
 const providerSel = document.getElementById('provider');
 const keyInput = document.getElementById('key');
 const keyLabel = document.getElementById('keyLabel');
-const hint = document.getElementById('hint');
-const ok = document.getElementById('ok');
+const keyLink = document.getElementById('keyLink');
+const keyToggle = document.getElementById('keyToggle');
 const modelInput = document.getElementById('model');
 const visionSwitch = document.getElementById('visionSwitch');
 const visionSub = document.getElementById('visionSub');
+const save = document.getElementById('save');
+const saveLabel = document.getElementById('saveLabel');
+const status = document.getElementById('status');
 
 let apiKeys = {};
 let modelOverride = {};
 let readImages = false;
+let activeProvider = 'deepseek';
+let feedbackTimer;
 
 chrome.storage.local.get(['provider', 'apiKeys', 'modelOverride', 'readImages'], (r) => {
   apiKeys = r.apiKeys || {};
   modelOverride = r.modelOverride || {};
   readImages = !!r.readImages;
   providerSel.value = r.provider || 'deepseek';
+  activeProvider = providerSel.value;
   render();
 });
 
@@ -32,23 +38,42 @@ function render() {
   const m = META[p];
   keyLabel.textContent = m.name + ' API Key';
   keyInput.value = apiKeys[p] || '';
-  hint.innerHTML = `<a href="${m.keys}" target="_blank">获取 ${m.name} key →</a>`;
+  keyLink.href = m.keys;
+  keyLink.textContent = `获取 ${m.name} Key →`;
   modelInput.value = modelOverride[p] || '';
   modelInput.placeholder = `默认 ${m.model}`;
 
   // 当前模型不支持读图 → 禁用开关并说明
   if (m.vision) {
     visionSwitch.disabled = false;
-    visionSub.textContent = '让模型看懂配图再回';
+    visionSub.textContent = modelInput.value.trim() ? '请确认自定义模型支持图片' : '让模型看懂配图再回';
   } else {
     visionSwitch.disabled = true;
-    readImages = false;
-    visionSub.textContent = `${m.name} 不支持读图，换 OpenAI / Grok / Claude`;
+    visionSub.textContent = `${m.name} 暂不支持读图`;
   }
-  visionSwitch.setAttribute('aria-checked', String(readImages));
+  visionSwitch.setAttribute('aria-checked', String(m.vision && readImages));
 }
 
-providerSel.addEventListener('change', render);
+modelInput.addEventListener('input', () => {
+  if (META[providerSel.value].vision) {
+    visionSub.textContent = modelInput.value.trim() ? '请确认自定义模型支持图片' : '让模型看懂配图再回';
+  }
+});
+
+providerSel.addEventListener('change', () => {
+  apiKeys[activeProvider] = keyInput.value.trim();
+  modelOverride[activeProvider] = modelInput.value.trim();
+  activeProvider = providerSel.value;
+  render();
+});
+
+keyToggle.addEventListener('click', () => {
+  const show = keyInput.type === 'password';
+  keyInput.type = show ? 'text' : 'password';
+  keyToggle.setAttribute('aria-pressed', String(show));
+  keyToggle.setAttribute('aria-label', show ? '隐藏 API Key' : '显示 API Key');
+  keyToggle.title = show ? '隐藏 API Key' : '显示 API Key';
+});
 
 visionSwitch.addEventListener('click', () => {
   if (visionSwitch.disabled) return;
@@ -56,13 +81,22 @@ visionSwitch.addEventListener('click', () => {
   visionSwitch.setAttribute('aria-checked', String(readImages));
 });
 
-document.getElementById('save').addEventListener('click', () => {
+document.getElementById('settings').addEventListener('submit', (event) => {
+  event.preventDefault();
   const p = providerSel.value;
   apiKeys[p] = keyInput.value.trim();
   modelOverride[p] = modelInput.value.trim();
+  readImages = META[p].vision && readImages;
   chrome.storage.local.set({ provider: p, apiKeys, modelOverride, readImages }, () => {
-    ok.textContent = '已保存';
-    ok.classList.add('show');
-    setTimeout(() => ok.classList.remove('show'), 1600);
+    clearTimeout(feedbackTimer);
+    const failed = chrome.runtime.lastError;
+    save.classList.toggle('error', !!failed);
+    save.classList.toggle('saved', !failed);
+    saveLabel.textContent = failed ? '保存失败，请重试' : '已保存';
+    status.textContent = saveLabel.textContent;
+    feedbackTimer = setTimeout(() => {
+      save.classList.remove('saved', 'error');
+      saveLabel.textContent = '保存设置';
+    }, 1600);
   });
 });

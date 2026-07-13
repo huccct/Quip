@@ -6,13 +6,13 @@ const EXAMPLES = [
     stats: ['149', '12', '70'],
     text: '想冲一万个蓝V关注，目前7000个，评论区留言互关一波，秒回。',
     hook: '反常识真话',
-    reply: '7000到10000这段最难熬，互关来的粉大多是僵尸，真到万了你会发现活人还是那几百个 😅',
+    reply: '互关涨的是数字，留住人的还得是内容',
   },
   {
     name: 'Tunan', handle: '@orion_c29', time: '5h', color: '#1d2939', av: 'O',
     stats: ['88', '9', '512'],
     text: 'shipped my side project after 3 months. 0 users so far lol',
-    hook: 'following the tweet language',
+    hook: '跟随原推语言',
     reply: '0 users on day one is just called "launching". the scary part is day 30 with the same number',
   },
   {
@@ -20,7 +20,7 @@ const EXAMPLES = [
     stats: ['23', '3', '41'],
     text: '连续加班两周，今天终于把项目上线了，结果没人用，有点想放弃。',
     hook: '看调性·不硬玩梗',
-    reply: '上线没人用太正常了，难的从来不是做出来，是做出来之后还愿意接着改。别急着下结论',
+    reply: '先别拿发布当天，给两周的努力判死刑',
   },
   {
     name: 'Tunan', handle: '@orion_c29', time: '3h', color: '#1d2939', av: 'O',
