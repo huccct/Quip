@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Quip · 一键妙回复",
-  "version": "0.1.1",
-  "description": "在任意推文下一键生成贴合语境、像真人的回复，填进回复框，由你确认发送。",
+  "name": "Quip · AI Reply Assistant",
+  "version": "0.1.2",
+  "description": "Generate natural, context-aware replies on X using your preferred AI model.",
   "homepage_url": "https://quip-hucccts-projects.vercel.app",
   "permissions": ["storage", "clipboardWrite"],
   "host_permissions": [
@@ -21,7 +21,7 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Quip 设置",
+    "default_title": "Quip Settings",
     "default_icon": {
       "16": "icons/icon16.png",
       "32": "icons/icon32.png",

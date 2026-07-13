@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quip · 一键妙回复</title>
-<meta name="description" content="理解推文、配图与引用内容，一键生成可选风格、像真人的回复。">
+<title>Quip · AI Reply Assistant for X</title>
+<meta name="description" content="Generate natural, context-aware replies on X using your preferred AI model.">
 <link rel="icon" href="logo.png">
 <style>
   :root{
@@ -25,6 +25,8 @@
   .logo img{width:26px;height:26px;border-radius:7px}
   .nav-r{display:flex;align-items:center;gap:22px;font-size:14px;color:var(--muted)}
   .nav-r a:hover{color:var(--ink)}
+  .lang-toggle{border:0;background:transparent;color:var(--muted);font:inherit;cursor:pointer}
+  .lang-toggle:hover{color:var(--ink)}
 
   /* hero */
   .hero{text-align:center;padding:78px 0 64px}
@@ -109,21 +111,22 @@
     <nav>
       <a class="logo" href="#"><img src="logo.png" alt="">Quip</a>
       <div class="nav-r">
-        <a href="#how">怎么用</a>
+        <button class="lang-toggle" id="langToggle" type="button">中文</button>
+        <a href="#how" data-i18n="navHow">How it works</a>
         <a href="https://github.com/huccct/Quip" target="_blank">GitHub</a>
       </div>
     </nav>
 
     <div class="hero">
-      <span class="badge">读懂上下文 · 四种风格 · 多模型 · 开源</span>
-      <h1>在推特上，<br>回一句<em>有意思</em>的话</h1>
-      <p>Quip 会结合正文、配图和引用推文，一键生成贴合语境、像真人的回复。自适应、幽默、真诚或犀利，由你选。</p>
+      <span class="badge" data-i18n="badge">Context-aware · Four styles · Multiple models · Open source</span>
+      <h1 data-i18n="heroTitle">Write a reply<br><em>worth posting</em></h1>
+      <p data-i18n="heroText">Quip understands post text, images, and quoted posts to draft a natural reply. Choose Adaptive, Funny, Warm, or Sharp.</p>
       <div class="cta">
         <a class="btn btn-primary" href="quip.zip" download>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg>
-          下载插件
+          <span data-i18n="download">Download extension</span>
         </a>
-        <a class="btn btn-ghost" href="https://github.com/huccct/Quip" target="_blank">看源码</a>
+        <a class="btn btn-ghost" href="https://github.com/huccct/Quip" target="_blank" data-i18n="source">View source</a>
       </div>
     </div>
 
@@ -145,46 +148,47 @@
       <div class="reply">
         <div class="reply-lbl">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>
-          Quip 生成 <span class="hook-tag" id="hookTag"></span>
+          <span data-i18n="generated">Quip draft</span> <span class="hook-tag" id="hookTag"></span>
         </div>
-        <div class="reply-box empty" id="replyBox">点下面的按钮，看 Quip 怎么接<span class="cursor"></span></div>
+        <div class="reply-box empty" id="replyBox"></div>
         <button class="quip-mini" id="genBtn">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>
-          <span id="genLabel">生成回复</span>
+          <span id="genLabel">Generate reply</span>
         </button>
       </div>
     </div>
-    <p class="demo-note">示例效果，帮你感受风格。实际回复由你选的模型现场生成。</p>
+    <p class="demo-note" data-i18n="demoNote">A small demo of the writing style. Real replies are generated live by your selected model.</p>
   </div>
 
   <div class="wrap">
     <section>
-      <div class="kicker">为什么不一样</div>
-      <div class="s-title">先从不同角度起草，再只留最自然的一句</div>
-      <p class="s-lead">Quip 让模型先理解原推的语言、意图和情绪，再用<b>写手 × 编辑双视角自审</b>淘汰误读、复述、废话和尬梗，最后只输出一条可直接修改的草稿。</p>
+      <div class="kicker" data-i18n="whyKicker">Why Quip</div>
+      <div class="s-title" data-i18n="whyTitle">Draft different angles, keep only the natural one</div>
+      <p class="s-lead" data-i18n="whyLead">Quip first understands the post's language, intent, and tone. A <b>writer × editor review flow</b> removes misreadings, repetition, filler, and forced jokes before returning one editable draft.</p>
       <div class="feats">
-        <div class="feat"><h3>四种回复风格</h3><p>自适应、幽默、真诚、犀利；同一条推文，也能选择不同表达。</p></div>
-        <div class="feat"><h3>跟随原推语言</h3><p>中文推回中文，英文推回英文，自动判断。</p></div>
-        <div class="feat"><h3>理解图片与引用推文</h3><p>结合配图、视频封面和嵌套引用理解上下文，并明确提示图片是否随请求发送。</p></div>
-        <div class="feat"><h3>模型任选</h3><p>DeepSeek、OpenAI、Grok、Claude，填自己的 key，回复走你的额度。</p></div>
-        <div class="feat"><h3>发不发你说了算</h3><p>只把草稿填进回复框，由你修改和发送。推文内容及开启读取的图片会发给所选模型商。</p></div>
+        <div class="feat"><h3 data-i18n="styleTitle">Four reply styles</h3><p data-i18n="styleText">Adaptive, Funny, Warm, and Sharp—different expressions for the same post.</p></div>
+        <div class="feat"><h3 data-i18n="languageTitle">Matches the post's language</h3><p data-i18n="languageText">Chinese replies to Chinese, English replies to English, detected automatically.</p></div>
+        <div class="feat"><h3 data-i18n="contextTitle">Understands images and quotes</h3><p data-i18n="contextText">Uses images, video covers, and nested quoted posts, and clearly shows whether images were sent.</p></div>
+        <div class="feat"><h3 data-i18n="modelsTitle">Choose your model</h3><p data-i18n="modelsText">DeepSeek, OpenAI, Grok, or Claude with your own API key and credits.</p></div>
+        <div class="feat"><h3 data-i18n="controlTitle">You decide what gets posted</h3><p data-i18n="controlText">Quip only fills the reply draft. You review, edit, and send it yourself.</p></div>
       </div>
     </section>
 
     <section id="how">
-      <div class="kicker">怎么用</div>
-      <div class="s-title">三步装好，一下就会</div>
+      <div class="kicker" data-i18n="howKicker">How it works</div>
+      <div class="s-title" data-i18n="howTitle">Install in three steps</div>
       <div class="steps">
-        <div class="step"><div><b>下载并加载</b><p>点上方「下载插件」得到 zip，解压。打开 chrome://extensions，开「开发者模式」→「加载已解压的扩展程序」→ 选解压出的文件夹。</p></div></div>
-        <div class="step"><div><b>选模型、风格，填 key</b><p>点 Quip 图标，选择模型和回复风格，填入对应 API key，保存。</p></div></div>
-        <div class="step"><div><b>点开推文，一键回</b><p>回复框工具栏会出现 ✦ 按钮，点它生成，改一改，手点发。</p></div></div>
+        <div class="step"><div><b data-i18n="step1Title">Download and load</b><p data-i18n="step1Text">Download the zip and extract it. Open chrome://extensions, enable Developer mode, choose Load unpacked, and select the folder.</p></div></div>
+        <div class="step"><div><b data-i18n="step2Title">Choose a model and style</b><p data-i18n="step2Text">Open Quip, choose a provider and reply style, enter the matching API key, and save.</p></div></div>
+        <div class="step"><div><b data-i18n="step3Title">Open a post and reply</b><p data-i18n="step3Text">Click the ✦ button in the reply toolbar, review the generated draft, and send it yourself.</p></div></div>
       </div>
     </section>
   </div>
 
   <footer>
-    <div class="wrap">Quip · 一键妙回复 &nbsp;·&nbsp; by <a href="https://x.com/orion_c29" target="_blank">orion</a> &nbsp;·&nbsp; <a href="https://github.com/huccct/Quip" target="_blank">GitHub</a></div>
+    <div class="wrap"><span data-i18n="footerName">Quip · AI Reply Assistant</span> &nbsp;·&nbsp; by <a href="https://x.com/orion_c29" target="_blank">orion</a> &nbsp;·&nbsp; <a href="https://github.com/huccct/Quip" target="_blank">GitHub</a></div>
   </footer>
+  <script src="i18n.js"></script>
   <script src="demo.js"></script>
 </body>
 </html>

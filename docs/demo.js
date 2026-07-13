@@ -5,28 +5,28 @@ const EXAMPLES = [
     name: 'Tunan', handle: '@orion_c29', time: '2h', color: '#1d2939', av: 'O',
     stats: ['149', '12', '70'],
     text: '想冲一万个蓝V关注，目前7000个，评论区留言互关一波，秒回。',
-    hook: '反常识真话',
+    hook: { zh: '反常识真话', en: 'Counterintuitive truth' },
     reply: '互关涨的是数字，留住人的还得是内容',
   },
   {
     name: 'Tunan', handle: '@orion_c29', time: '5h', color: '#1d2939', av: 'O',
     stats: ['88', '9', '512'],
     text: 'shipped my side project after 3 months. 0 users so far lol',
-    hook: '跟随原推语言',
+    hook: { zh: '跟随原推语言', en: 'Matches the language' },
     reply: '0 users on day one is just called "launching". the scary part is day 30 with the same number',
   },
   {
     name: 'Tunan', handle: '@orion_c29', time: '1h', color: '#1d2939', av: 'O',
     stats: ['23', '3', '41'],
     text: '连续加班两周，今天终于把项目上线了，结果没人用，有点想放弃。',
-    hook: '看调性·不硬玩梗',
+    hook: { zh: '看调性·不硬玩梗', en: 'Tone-aware' },
     reply: '先别拿发布当天，给两周的努力判死刑',
   },
   {
     name: 'Tunan', handle: '@orion_c29', time: '3h', color: '#1d2939', av: 'O',
     stats: ['205', '48', '1.2K'],
     text: 'AIってもう人間の仕事全部奪うんじゃない？',
-    hook: '意外角度',
+    hook: { zh: '意外角度', en: 'Unexpected angle' },
     reply: '奪うっていうか、面倒な部分だけ持ってって、責任は全部こっちに残していく感じ',
   },
 ];
@@ -44,7 +44,12 @@ const box = document.getElementById('replyBox');
 const btn = document.getElementById('genBtn');
 const genLabel = document.getElementById('genLabel');
 
-let idx = 0;
+const COPY = {
+  en: { empty: 'Click below to see how Quip replies', generate: 'Generate reply', again: 'Another one →' },
+  zh: { empty: '点下面的按钮，看 Quip 怎么接', generate: '生成回复', again: '再来一条 →' },
+};
+let language = document.documentElement.lang.startsWith('zh') ? 'zh' : 'en';
+let idx = language === 'zh' ? 0 : 1;
 
 function loadExample(i) {
   const e = EXAMPLES[i];
@@ -59,8 +64,8 @@ function loadExample(i) {
   stL.textContent = e.stats[2];
   hookTag.textContent = '';
   box.classList.add('empty');
-  box.innerHTML = '点下面的按钮，看 Quip 怎么接<span class="cursor"></span>';
-  genLabel.textContent = '生成回复';
+  box.innerHTML = `${COPY[language].empty}<span class="cursor"></span>`;
+  genLabel.textContent = COPY[language].generate;
 }
 
 function typeReply(text) {
@@ -75,10 +80,10 @@ function typeReply(text) {
     if (i >= text.length) {
       clearInterval(timer);
       box.innerHTML = text;
-      hookTag.textContent = EXAMPLES[idx].hook;
+      hookTag.textContent = EXAMPLES[idx].hook[language];
       btn.disabled = false;
       btn.style.opacity = '1';
-      genLabel.textContent = '再来一条 →';
+      genLabel.textContent = COPY[language].again;
     }
   }, 42);
 }
@@ -95,4 +100,10 @@ btn.addEventListener('click', () => {
   }
 });
 
-loadExample(0);
+window.setDemoLanguage = (next) => {
+  language = next;
+  idx = language === 'zh' ? 0 : 1;
+  loadExample(idx);
+};
+
+loadExample(idx);

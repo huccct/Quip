@@ -4,50 +4,52 @@
 
 # Quip
 
-**在任意推文下，一键生成一条贴合语境、像真人的回复。**
+**Generate natural, context-aware replies on X with one click.**
 
-理解正文、配图与引用推文 · 四种风格 · 多模型 · 真人点发
+Understands text, images, and quoted posts · Four reply styles · Multiple AI providers · You send manually
+
+[English](README.md) · [简体中文](README.zh-CN.md)
 
 </div>
 
 ---
 
-## 为什么不一样
+## Why Quip
 
-只让 AI「礼貌回复」，很容易得到正确但没必要发的废话。
+Asking AI to “write a polite reply” often produces something correct but not worth posting.
 
-Quip 内置**写手 × 编辑双视角自审**：先从不同角度起草，再以挑剔读者的视角淘汰误读、废话和尬梗，只输出最自然的一句。
+Quip uses a **writer × editor review flow**: it drafts several angles internally, rejects misreadings, filler, clichés, and forced jokes, then returns one natural reply.
 
-## 特点
+## Features
 
-- **贴合语境** — 该接梗时有意思，严肃或难过时不硬抖机灵
-- **风格可选** — 自适应、幽默、真诚、犀利
-- **理解完整上下文** — 读取配图、视频封面和嵌套引用推文，并显示图片传递状态
-- **跟随语言** — 中文推回中文，英文推回英文
-- **多模型** — DeepSeek · OpenAI · Grok · Claude，填自己的 key
-- **你说了算** — 只填草稿进回复框，由你修改和发送
-- **零自建后端** — key 保存在浏览器本地；生成时，推文内容及你开启读取的图片会发送给所选模型商
+- **Context-aware** — witty when appropriate, sincere or useful when the post is serious
+- **Four styles** — Adaptive, Funny, Warm, and Sharp
+- **Fuller context** — reads images, video covers, and nested quoted posts, with visible image-delivery status
+- **Language matching** — replies in the original post's language
+- **Multiple providers** — DeepSeek, OpenAI, Grok, and Claude with your own API key
+- **You stay in control** — Quip fills the draft; you edit and send it
+- **No custom backend** — keys stay in local browser storage; post content and enabled images go directly to your selected AI provider
 
-## 安装
+## Install
 
+```text
+1. Download and unzip this repository
+2. Open chrome://extensions and enable Developer mode
+3. Click “Load unpacked” and select the project folder
+4. Open Quip, choose a provider and style, enter your API key, and save
 ```
-1. 下载本仓库并解压
-2. 打开 chrome://extensions，开启「开发者模式」
-3. 「加载已解压的扩展程序」→ 选此文件夹
-4. 点 Quip 图标 → 选模型和风格 → 填 key → 保存
-```
 
-## 用法
+## Usage
 
-在 x.com 点开某条推 → 点回复框 → 点工具栏的 <b>✦</b> → 回复自动填进框 → 改一改、发。
+Open a post on x.com, focus the reply box, and click the **✦** button. Quip writes a draft into the box for you to review and send.
 
-不满意？再点一次，自动换新的。
+Click again if you want another version.
 
 ## Roadmap
 
-- [ ] 内置额度：不想自带 key，免费额度 + 订阅
-- [ ] 学你的语气：读你过往推文，回得更像你
-- [ ] 深度模式：真·双 agent，质量拉满
+- [ ] Personal voice profile based on a few examples
+- [ ] Better conversation-thread context
+- [ ] Optional hosted credits for people who do not want to bring an API key
 
 <div align="center">
 
