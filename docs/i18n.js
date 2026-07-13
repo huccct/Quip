@@ -1,3 +1,4 @@
+{
 const ZH = {
   navHow: '怎么用',
   badge: '读懂上下文 · 四种风格 · 多模型 · 开源',
@@ -40,3 +41,4 @@ function setLanguage(next) {
 
 toggle.addEventListener('click', () => setLanguage(language === 'zh' ? 'en' : 'zh'));
 setLanguage(language);
+}

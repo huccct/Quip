@@ -25,3 +25,7 @@ test('selects Chinese from the browser and toggles back to English', () => {
   assert.equal(node.innerHTML, 'How it works');
   assert.equal(document.documentElement.lang, 'en');
 });
+
+test('page scripts do not collide in the global scope', () => {
+  assert.doesNotThrow(() => new vm.Script(`${fs.readFileSync('docs/i18n.js', 'utf8')}\n${fs.readFileSync('docs/demo.js', 'utf8')}`));
+});

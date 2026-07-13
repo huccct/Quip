@@ -1,3 +1,4 @@
+{
 // 落地页演示：轮播多组「推文 → Quip 回复」，每组展示一种钩子，
 // 顺带秀出「跟随语言」「看调性不硬玩梗」。纯前端，不调真 API。
 const EXAMPLES = [
@@ -107,3 +108,4 @@ window.setDemoLanguage = (next) => {
 };
 
 loadExample(idx);
+}
