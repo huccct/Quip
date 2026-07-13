@@ -34,11 +34,13 @@ Quip uses a **writer × editor review flow**: it drafts several angles internall
 ## Install
 
 ```text
-1. Download and unzip this repository
+1. Download and unzip quip.zip from the latest GitHub Release
 2. Open chrome://extensions and enable Developer mode
 3. Click “Load unpacked” and select the project folder
 4. Open Quip, choose a provider and style, enter your API key, and save
 ```
+
+[Download the latest release](https://github.com/huccct/Quip/releases/latest)
 
 ## Usage
 

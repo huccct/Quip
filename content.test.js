@@ -49,15 +49,15 @@ test('builds separated system and tweet messages for text replies', async () => 
 test('sends Claude images with a system prompt', async () => {
   const requests = [];
   const statuses = [];
-  await load('claude', requests)('', [{ url: 'https://example.com/image.jpg', label: '外层推文配图' }], (...args) => statuses.push(args));
+  await load('claude', requests)('', [{ url: 'https://example.com/image.jpg', label: '外层推文配图' }], (...args) => statuses.push(args), 2);
   assert.equal(requests[0].body.model, 'claude-sonnet-5');
   assert.equal(requests[0].body.thinking.type, 'disabled');
   assert.equal(requests[0].body.max_tokens, 120);
   assert.match(requests[0].body.system, /写手兼编辑/);
   assert.equal(requests[0].body.messages[0].content[0].text, '外层推文配图');
   assert.equal(requests[0].body.messages[0].content[1].type, 'image');
-  assert.match(statuses[0][0], /已读取 1 张图 · 正在发送/);
-  assert.match(statuses.at(-1)[0], /1 张图已随请求发送/);
+  assert.match(statuses[0][0], /发送 2 条父级对话、1 张图片/);
+  assert.match(statuses.at(-1)[0], /请求中包含 2 条父级对话、1 张图片/);
 });
 
 test('uses non-reasoning defaults for DeepSeek and Grok', async () => {
@@ -139,4 +139,5 @@ test('reads only adjacent parent posts on a status detail page', () => {
   const read = load('openai', [], document).readTweetContext(toolbar);
 
   assert.match(read.text, /<conversation_context>[\s\S]*first parent[\s\S]*second parent[\s\S]*<tweet>[\s\S]*target post/);
+  assert.equal(read.parentCount, 2);
 });

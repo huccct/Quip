@@ -88,7 +88,7 @@ function collectMedia(root, excludedRoot, prefix) {
 
 function readTweetContext(toolbar) {
   const article = findSourceArticle(toolbar);
-  if (!article) return { text: '', images: [] };
+  if (!article) return { text: '', images: [], parentCount: 0 };
 
   const quote = findQuotedTweet(article);
   const outerText = firstText(article, '[data-testid="tweetText"]', quote);
@@ -110,6 +110,7 @@ function readTweetContext(toolbar) {
 
   return {
     text: sections.join('\n\n'),
+    parentCount: parents.length,
     // ponytail: 最多 4 个视觉输入；外层优先，真实需求超过后再做媒体分页。
     images: [
       ...collectMedia(article, quote, '外层推文'),
@@ -187,7 +188,7 @@ function getConfig() {
 }
 
 // ---- 调模型 ----
-async function generateReply(tweetText, images, onStatus) {
+async function generateReply(tweetText, images, onStatus, parentCount = 0) {
   const { provider, key, readImages, modelOverride, replyStyle, voiceProfile } = await getConfig();
   const cfg = PROVIDERS[provider];
   if (!key) {
@@ -206,7 +207,8 @@ async function generateReply(tweetText, images, onStatus) {
   }
   const useImages = wantImages && cfg.vision;
   const model = modelOverride || cfg.model;
-  if (useImages) onStatus?.(t('imagesSending', images.length, cfg.name), 'info');
+  const imageCount = useImages ? images.length : 0;
+  if (useImages || parentCount) onStatus?.(t('contextSending', parentCount, imageCount, cfg.name), 'info');
   else if (images?.length) onStatus?.(t('imagesDisabled'), 'muted', 2600);
   else onStatus?.(t('noImages'), 'muted', 2600);
 
@@ -309,7 +311,7 @@ ${voiceProfile ? `\n用户表达偏好（仅用于措辞和视角）：\n<voice_
     alert(t('providerRequestFailed', cfg.name, res.status, err));
     return null;
   }
-  if (useImages) onStatus?.(t('imagesSent', images.length, cfg.name), 'success', 3200);
+  onStatus?.(t('contextSent', parentCount, imageCount, cfg.name), 'success', 3200);
   const data = await res.json();
   // 两种格式的返回结构不同
   if (provider === 'claude') {
@@ -394,7 +396,7 @@ function injectInlineButton(toolbar) {
     try {
       const reply = await generateReply(tweet.text, tweet.images, (text, tone, duration) => {
         showImageStatus(btn, text, tone, duration);
-      });
+      }, tweet.parentCount);
       if (reply) await insertText(live, reply);
     } catch (err) {
       showImageStatus(btn, t('imageSendUnconfirmed'), 'error', 3200);
