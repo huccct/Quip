@@ -130,6 +130,13 @@ const PROVIDERS = {
   claude:   { url: 'https://api.anthropic.com/v1/messages',      model: 'claude-sonnet-5',                  name: 'Claude', vision: true },
 };
 
+const REPLY_STYLES = {
+  adaptive: '根据语境自行选择最合适的表达方式。',
+  funny: '优先写得幽默、有巧思；不要硬玩梗或冒犯。',
+  warm: '优先真诚、友善、有共鸣；不要空泛吹捧。',
+  sharp: '优先简洁犀利、观点鲜明；对事不对人，不刻薄。',
+};
+
 // 读取当前选定的模型商 + 对应 key
 function getConfig() {
   return new Promise((resolve, reject) => {
@@ -137,7 +144,7 @@ function getConfig() {
       reject(new Error('插件上下文已失效（多半是刚重载过扩展）。请刷新这个 X 页面(F5)再试。'));
       return;
     }
-    chrome.storage.local.get(['provider', 'apiKeys', 'readImages', 'modelOverride'], (r) => {
+    chrome.storage.local.get(['provider', 'apiKeys', 'readImages', 'modelOverride', 'replyStyle'], (r) => {
       if (chrome.runtime && chrome.runtime.lastError) {
         reject(new Error(chrome.runtime.lastError.message + '（请刷新页面 F5 再试）'));
         return;
@@ -146,16 +153,18 @@ function getConfig() {
       const key = (r.apiKeys || {})[provider] || '';
       const readImages = !!r.readImages;
       const modelOverride = ((r.modelOverride || {})[provider] || '').trim();
-      resolve({ provider, key, readImages, modelOverride });
+      const replyStyle = REPLY_STYLES[r.replyStyle] ? r.replyStyle : 'adaptive';
+      resolve({ provider, key, readImages, modelOverride, replyStyle });
     });
   });
 }
 
 // ---- 调模型 ----
-async function generateReply(tweetText, images) {
-  const { provider, key, readImages, modelOverride } = await getConfig();
+async function generateReply(tweetText, images, onStatus) {
+  const { provider, key, readImages, modelOverride, replyStyle } = await getConfig();
   const cfg = PROVIDERS[provider];
   if (!key) {
+    onStatus?.('未发送图片 · 尚未设置 Key', 'error', 3000);
     alert(`还没设置 ${cfg.name} key。点浏览器右上角插件图标填一下。`);
     return null;
   }
@@ -163,15 +172,21 @@ async function generateReply(tweetText, images) {
   // 是否真的要带图：开关开着、推文有图、且当前模型能读图。
   const wantImages = readImages && images && images.length > 0;
   if (wantImages && !cfg.vision) {
+    onStatus?.(`未发送图片 · ${cfg.name} 不支持读图`, 'error', 3000);
     // Fail loud：不静默丢图假装读了。明确告诉用户换模型或关开关。
     alert(`${cfg.name} 读不了图。请在插件里换成 OpenAI / Grok / Claude，或关掉「读取推文图片」。`);
     return null;
   }
   const useImages = wantImages && cfg.vision;
   const model = modelOverride || cfg.model;
+  if (useImages) onStatus?.(`已读取 ${images.length} 张图 · 正在发送给 ${cfg.name}…`, 'info');
+  else if (images?.length) onStatus?.('未发送图片 · 读图已关闭', 'muted', 2600);
+  else onStatus?.('未检测到可读图片', 'muted', 2600);
 
   // 写手先出不同角度，编辑再按语境筛选；模型只返回终稿。
   const systemPrompt = `你是擅长社交媒体短回复的写手兼编辑。目标是写出贴合语境、自然、有记忆点的回复，而不是刻意搞笑。
+
+本次风格：${REPLY_STYLES[replyStyle]}
 
 先在内部完成：
 1. 判断原推的语言、真实意图和情绪；图片也是原推内容。
@@ -252,9 +267,11 @@ async function generateReply(tweetText, images) {
 
   if (!res.ok) {
     const err = await res.text();
+    if (useImages) onStatus?.(`图片请求失败 · ${cfg.name} ${res.status}`, 'error', 3200);
     alert(`${cfg.name} 报错：${res.status}\n${err.slice(0, 200)}`);
     return null;
   }
+  if (useImages) onStatus?.(`✓ ${images.length} 张图已随请求发送给 ${cfg.name}`, 'success', 3200);
   const data = await res.json();
   // 两种格式的返回结构不同
   if (provider === 'claude') {
@@ -272,6 +289,23 @@ function isReplyContext(toolbar) {
   const label = (sendBtn.innerText || '').trim().toLowerCase();
   // Reply / 回复 → 是回复场景；Post / Reply all 等含 reply 的也算
   return label.includes('reply') || label.includes('回复');
+}
+
+function showImageStatus(btn, text, tone = 'info', duration = 0) {
+  btn._xqrStatus?.remove();
+  const status = document.createElement('div');
+  status.className = `xqr-status xqr-status-${tone}`;
+  status.textContent = text;
+  status.setAttribute('role', 'status');
+  const rect = btn.getBoundingClientRect();
+  status.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - 250))}px`;
+  status.style.top = `${Math.max(8, rect.top - 42)}px`;
+  document.body.appendChild(status);
+  btn._xqrStatus = status;
+  if (duration) setTimeout(() => {
+    status.remove();
+    if (btn._xqrStatus === status) btn._xqrStatus = null;
+  }, duration);
 }
 
 function injectInlineButton(toolbar) {
@@ -310,9 +344,12 @@ function injectInlineButton(toolbar) {
     const svg = btn.querySelector('svg');
     if (svg) { svg.style.transition = 'transform .8s linear'; svg.style.animation = 'xqr-spin 1s linear infinite'; }
     try {
-      const reply = await generateReply(tweet.text, tweet.images);
+      const reply = await generateReply(tweet.text, tweet.images, (text, tone, duration) => {
+        showImageStatus(btn, text, tone, duration);
+      });
       if (reply) await insertText(live, reply);
     } catch (err) {
+      showImageStatus(btn, '请求失败 · 图片未确认发送', 'error', 3200);
       alert('出错了：' + err.message);
     } finally {
       btn.disabled = false;
@@ -340,7 +377,12 @@ function injectInlineButtons() {
 if (!document.getElementById('xqr-style')) {
   const style = document.createElement('style');
   style.id = 'xqr-style';
-  style.textContent = '@keyframes xqr-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}';
+  style.textContent = `
+    @keyframes xqr-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+    .xqr-status{position:fixed;z-index:2147483647;max-width:242px;padding:8px 11px;border:1px solid rgba(255,255,255,.14);border-radius:10px;background:#19202a;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.2);font:500 12px/1.35 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;pointer-events:none;animation:xqr-status-in .16s ease-out}
+    .xqr-status-success{background:#137333}.xqr-status-muted{background:#53606f}.xqr-status-error{background:#b42318}
+    @keyframes xqr-status-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  `;
   document.head.appendChild(style);
 }
 

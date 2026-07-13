@@ -7,6 +7,11 @@ const META = {
 };
 
 const providerSel = document.getElementById('provider');
+const providerButton = document.getElementById('providerButton');
+const providerValue = document.getElementById('providerValue');
+const providerMenu = document.getElementById('providerMenu');
+const providerOptions = [...document.querySelectorAll('.provider-option')];
+const styleOptions = [...document.querySelectorAll('.style-option')];
 const keyInput = document.getElementById('key');
 const keyLabel = document.getElementById('keyLabel');
 const keyLink = document.getElementById('keyLink');
@@ -21,13 +26,15 @@ const status = document.getElementById('status');
 let apiKeys = {};
 let modelOverride = {};
 let readImages = false;
+let replyStyle = 'adaptive';
 let activeProvider = 'deepseek';
 let feedbackTimer;
 
-chrome.storage.local.get(['provider', 'apiKeys', 'modelOverride', 'readImages'], (r) => {
+chrome.storage.local.get(['provider', 'apiKeys', 'modelOverride', 'readImages', 'replyStyle'], (r) => {
   apiKeys = r.apiKeys || {};
   modelOverride = r.modelOverride || {};
   readImages = !!r.readImages;
+  replyStyle = r.replyStyle || 'adaptive';
   providerSel.value = r.provider || 'deepseek';
   activeProvider = providerSel.value;
   render();
@@ -36,6 +43,9 @@ chrome.storage.local.get(['provider', 'apiKeys', 'modelOverride', 'readImages'],
 function render() {
   const p = providerSel.value;
   const m = META[p];
+  providerValue.textContent = m.name;
+  providerOptions.forEach((option) => option.setAttribute('aria-selected', String(option.dataset.value === p)));
+  styleOptions.forEach((option) => option.setAttribute('aria-checked', String(option.dataset.style === replyStyle)));
   keyLabel.textContent = m.name + ' API Key';
   keyInput.value = apiKeys[p] || '';
   keyLink.href = m.keys;
@@ -60,12 +70,40 @@ modelInput.addEventListener('input', () => {
   }
 });
 
-providerSel.addEventListener('change', () => {
+function changeProvider(provider) {
   apiKeys[activeProvider] = keyInput.value.trim();
   modelOverride[activeProvider] = modelInput.value.trim();
-  activeProvider = providerSel.value;
+  providerSel.value = provider;
+  activeProvider = provider;
   render();
+  setMenuOpen(false);
+}
+
+function setMenuOpen(open) {
+  providerMenu.hidden = !open;
+  providerButton.setAttribute('aria-expanded', String(open));
+}
+
+providerSel.addEventListener('change', () => changeProvider(providerSel.value));
+providerButton.addEventListener('click', () => setMenuOpen(providerMenu.hidden));
+providerOptions.forEach((option) => option.addEventListener('click', () => {
+  changeProvider(option.dataset.value);
+  providerButton.focus();
+}));
+document.addEventListener('click', (event) => {
+  if (!providerMenu.hidden && !providerButton.contains(event.target) && !providerMenu.contains(event.target)) setMenuOpen(false);
 });
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !providerMenu.hidden) {
+    setMenuOpen(false);
+    providerButton.focus();
+  }
+});
+
+styleOptions.forEach((option) => option.addEventListener('click', () => {
+  replyStyle = option.dataset.style;
+  styleOptions.forEach((item) => item.setAttribute('aria-checked', String(item === option)));
+}));
 
 keyToggle.addEventListener('click', () => {
   const show = keyInput.type === 'password';
@@ -87,7 +125,7 @@ document.getElementById('settings').addEventListener('submit', (event) => {
   apiKeys[p] = keyInput.value.trim();
   modelOverride[p] = modelInput.value.trim();
   readImages = META[p].vision && readImages;
-  chrome.storage.local.set({ provider: p, apiKeys, modelOverride, readImages }, () => {
+  chrome.storage.local.set({ provider: p, apiKeys, modelOverride, readImages, replyStyle }, () => {
     clearTimeout(feedbackTimer);
     const failed = chrome.runtime.lastError;
     save.classList.toggle('error', !!failed);

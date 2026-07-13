@@ -3,14 +3,14 @@ const fs = require('node:fs');
 const test = require('node:test');
 const vm = require('node:vm');
 
-function load(provider, requests, customDocument) {
+function load(provider, requests, customDocument, replyStyle = 'adaptive') {
   const context = {
     console,
     alert() {},
     navigator: { clipboard: { writeText: async () => {} } },
     chrome: {
       runtime: {},
-      storage: { local: { get: (_, done) => done({ provider, apiKeys: { [provider]: 'key' }, readImages: true }) } },
+      storage: { local: { get: (_, done) => done({ provider, apiKeys: { [provider]: 'key' }, readImages: true, replyStyle }) } },
     },
     document: customDocument || {
       querySelector: () => null,
@@ -45,12 +45,15 @@ test('builds separated system and tweet messages for text replies', async () => 
 
 test('sends Claude images with a system prompt', async () => {
   const requests = [];
-  await load('claude', requests)('', [{ url: 'https://example.com/image.jpg', label: '外层推文配图' }]);
+  const statuses = [];
+  await load('claude', requests)('', [{ url: 'https://example.com/image.jpg', label: '外层推文配图' }], (...args) => statuses.push(args));
   assert.equal(requests[0].body.model, 'claude-sonnet-5');
   assert.equal(requests[0].body.thinking.type, 'disabled');
   assert.match(requests[0].body.system, /写手兼编辑/);
   assert.equal(requests[0].body.messages[0].content[0].text, '外层推文配图');
   assert.equal(requests[0].body.messages[0].content[1].type, 'image');
+  assert.match(statuses[0][0], /已读取 1 张图 · 正在发送/);
+  assert.match(statuses.at(-1)[0], /1 张图已随请求发送/);
 });
 
 test('uses non-reasoning defaults for DeepSeek and Grok', async () => {
@@ -64,6 +67,12 @@ test('uses non-reasoning defaults for DeepSeek and Grok', async () => {
   assert.equal(grok[0].body.model, 'grok-4.3');
   assert.equal(grok[0].body.reasoning_effort, 'none');
   assert.equal(grok[0].body.thinking, undefined);
+});
+
+test('applies the selected reply style', async () => {
+  const requests = [];
+  await load('openai', requests, undefined, 'sharp')('tweet', []);
+  assert.match(requests[0].body.messages[0].content, /优先简洁犀利、观点鲜明/);
 });
 
 test('keeps outer and quoted tweet content separated', () => {
