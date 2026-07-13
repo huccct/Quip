@@ -9,6 +9,7 @@ const ZH = {
   whyKicker: '为什么不一样', whyTitle: '先从不同角度起草，再只留最自然的一句',
   whyLead: 'Quip 先理解原推的语言、意图和情绪，再用<b>写手 × 编辑双视角自审</b>淘汰误读、复述、废话和尬梗，最后只输出一条可直接修改的草稿。',
   styleTitle: '四种回复风格', styleText: '自适应、幽默、真诚、犀利；同一条推文，也能选择不同表达。',
+  voiceTitle: '更像你的语气', voiceText: '填写一段表达偏好或几条示例回复，让 Quip 贴近你的措辞和视角。',
   languageTitle: '跟随原推语言', languageText: '中文推回中文，英文推回英文，自动判断。',
   contextTitle: '理解图片与引用推文', contextText: '结合配图、视频封面和嵌套引用理解上下文，并明确提示图片是否随请求发送。',
   modelsTitle: '模型任选', modelsText: 'DeepSeek、OpenAI、Grok、Claude，填自己的 Key，回复走你的额度。',

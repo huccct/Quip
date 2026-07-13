@@ -4,6 +4,10 @@
 
 const BTN_CLASS = 'xqr-inline-btn';
 
+function t(key, ...values) {
+  return (chrome.i18n?.getMessage(key) || key).replace(/\{(\d+)\}/g, (_, index) => values[index] ?? '');
+}
+
 // ---- 从当前回复工具栏反查编辑框和被回复的推文 ----
 function findRelatedElement(toolbar, selector) {
   for (let root = toolbar; root && root !== document.body; root = root.parentElement) {
@@ -141,12 +145,12 @@ const REPLY_STYLES = {
 function getConfig() {
   return new Promise((resolve, reject) => {
     if (!chrome || !chrome.storage || !chrome.storage.local) {
-      reject(new Error('插件上下文已失效（多半是刚重载过扩展）。请刷新这个 X 页面(F5)再试。'));
+      reject(new Error(t('contextExpired')));
       return;
     }
-    chrome.storage.local.get(['provider', 'apiKeys', 'readImages', 'modelOverride', 'replyStyle'], (r) => {
+    chrome.storage.local.get(['provider', 'apiKeys', 'readImages', 'modelOverride', 'replyStyle', 'voiceProfile'], (r) => {
       if (chrome.runtime && chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message + '（请刷新页面 F5 再试）'));
+        reject(new Error(t('refreshAndRetry', chrome.runtime.lastError.message)));
         return;
       }
       const provider = r.provider || 'deepseek';
@@ -154,39 +158,41 @@ function getConfig() {
       const readImages = !!r.readImages;
       const modelOverride = ((r.modelOverride || {})[provider] || '').trim();
       const replyStyle = REPLY_STYLES[r.replyStyle] ? r.replyStyle : 'adaptive';
-      resolve({ provider, key, readImages, modelOverride, replyStyle });
+      const voiceProfile = String(r.voiceProfile || '').trim().slice(0, 1000);
+      resolve({ provider, key, readImages, modelOverride, replyStyle, voiceProfile });
     });
   });
 }
 
 // ---- 调模型 ----
 async function generateReply(tweetText, images, onStatus) {
-  const { provider, key, readImages, modelOverride, replyStyle } = await getConfig();
+  const { provider, key, readImages, modelOverride, replyStyle, voiceProfile } = await getConfig();
   const cfg = PROVIDERS[provider];
   if (!key) {
-    onStatus?.('未发送图片 · 尚未设置 Key', 'error', 3000);
-    alert(`还没设置 ${cfg.name} key。点浏览器右上角插件图标填一下。`);
+    onStatus?.(t('imageNotSentNoKey'), 'error', 3000);
+    alert(t('missingKey', cfg.name));
     return null;
   }
 
   // 是否真的要带图：开关开着、推文有图、且当前模型能读图。
   const wantImages = readImages && images && images.length > 0;
   if (wantImages && !cfg.vision) {
-    onStatus?.(`未发送图片 · ${cfg.name} 不支持读图`, 'error', 3000);
+    onStatus?.(t('imageNotSentUnsupported', cfg.name), 'error', 3000);
     // Fail loud：不静默丢图假装读了。明确告诉用户换模型或关开关。
-    alert(`${cfg.name} 读不了图。请在插件里换成 OpenAI / Grok / Claude，或关掉「读取推文图片」。`);
+    alert(t('providerCannotReadImages', cfg.name));
     return null;
   }
   const useImages = wantImages && cfg.vision;
   const model = modelOverride || cfg.model;
-  if (useImages) onStatus?.(`已读取 ${images.length} 张图 · 正在发送给 ${cfg.name}…`, 'info');
-  else if (images?.length) onStatus?.('未发送图片 · 读图已关闭', 'muted', 2600);
-  else onStatus?.('未检测到可读图片', 'muted', 2600);
+  if (useImages) onStatus?.(t('imagesSending', images.length, cfg.name), 'info');
+  else if (images?.length) onStatus?.(t('imagesDisabled'), 'muted', 2600);
+  else onStatus?.(t('noImages'), 'muted', 2600);
 
   // 写手先出不同角度，编辑再按语境筛选；模型只返回终稿。
   const systemPrompt = `你是擅长社交媒体短回复的写手兼编辑。目标是写出贴合语境、自然、有记忆点的回复，而不是刻意搞笑。
 
 本次风格：${REPLY_STYLES[replyStyle]}
+${voiceProfile ? `\n用户表达偏好（仅用于措辞和视角）：\n<voice_profile>\n${voiceProfile}\n</voice_profile>\n` : ''}
 
 先在内部完成：
 1. 判断原推的语言、真实意图和情绪；图片也是原推内容。
@@ -267,11 +273,11 @@ async function generateReply(tweetText, images, onStatus) {
 
   if (!res.ok) {
     const err = await readApiError(res);
-    if (useImages) onStatus?.(`图片请求失败 · ${cfg.name} ${res.status}`, 'error', 3200);
-    alert(`${cfg.name} 请求失败（${res.status}）：${err}`);
+    if (useImages) onStatus?.(t('imageRequestFailed', cfg.name, res.status), 'error', 3200);
+    alert(t('providerRequestFailed', cfg.name, res.status, err));
     return null;
   }
-  if (useImages) onStatus?.(`✓ ${images.length} 张图已随请求发送给 ${cfg.name}`, 'success', 3200);
+  if (useImages) onStatus?.(t('imagesSent', images.length, cfg.name), 'success', 3200);
   const data = await res.json();
   // 两种格式的返回结构不同
   if (provider === 'claude') {
@@ -286,7 +292,7 @@ async function readApiError(response) {
     const data = JSON.parse(raw);
     return (data.error?.message || data.message || raw).slice(0, 200);
   } catch {
-    return raw.slice(0, 200) || '未知错误';
+    return raw.slice(0, 200) || t('unknownError');
   }
 }
 
@@ -327,7 +333,7 @@ function injectInlineButton(toolbar) {
   const btn = document.createElement('button');
   btn.className = BTN_CLASS;
   btn.type = 'button';
-  btn.title = 'AI 生成回复';
+  btn.title = t('generateReply');
   // 极简：做成和左边那排图片/GIF/emoji 图标同款 —— 圆形幽灵图标，X 蓝，hover 才有淡蓝圆底。
   btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>`;
   Object.assign(btn.style, {
@@ -344,9 +350,9 @@ function injectInlineButton(toolbar) {
     e.stopPropagation();
     const tweet = readTweetContext(toolbar);
     // 纯图无字的推也该能回，所以只要「有字」或「有图」其一即可
-    if (!tweet.text && tweet.images.length === 0) { alert('没读到被回复的推文内容。'); return; }
+    if (!tweet.text && tweet.images.length === 0) { alert(t('postNotFound')); return; }
     const live = findComposer(toolbar);
-    if (!live) { alert('没找到回复框。'); return; }
+    if (!live) { alert(t('composerNotFound')); return; }
 
     // 生成中：图标旋转 + 变淡，保持圆形不塞文字
     btn.disabled = true;
@@ -359,8 +365,8 @@ function injectInlineButton(toolbar) {
       });
       if (reply) await insertText(live, reply);
     } catch (err) {
-      showImageStatus(btn, '请求失败 · 图片未确认发送', 'error', 3200);
-      alert('出错了：' + err.message);
+      showImageStatus(btn, t('imageSendUnconfirmed'), 'error', 3200);
+      alert(t('unexpectedError', err.message));
     } finally {
       btn.disabled = false;
       btn.style.opacity = '1';

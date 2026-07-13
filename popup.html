@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <style>
@@ -12,7 +12,7 @@
   html,body{margin:0}
   body{width:336px;background:var(--bg);color:var(--text);font-family:-apple-system,
     BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;-webkit-font-smoothing:antialiased}
-  button,input,select{font:inherit}
+  button,input,select,textarea{font:inherit}
   button,a,summary{outline:none}
   :focus-visible{box-shadow:0 0 0 3px rgba(29,155,240,.16)!important;border-color:var(--blue)!important}
 
@@ -33,11 +33,12 @@
   .test-key{padding:0;border:0;background:transparent;color:var(--blue);font-size:11px;cursor:pointer}
   .test-key:disabled{color:var(--faint);cursor:default}
 
-  input,.select-button{width:100%;height:42px;border:1px solid var(--line);border-radius:var(--radius);
+  input,.select-button,textarea{width:100%;border:1px solid var(--line);border-radius:var(--radius);
     background:var(--surface);color:var(--text);font-size:13px;transition:.16s var(--ease)}
-  input:hover,.select-button:hover{border-color:#d3d6dc}
-  input{padding:0 12px}
-  input::placeholder{color:var(--faint)}
+  input,.select-button{height:42px}
+  input:hover,.select-button:hover,textarea:hover{border-color:#d3d6dc}
+  input{padding:0 12px} textarea{min-height:82px;padding:10px 12px;line-height:1.45;resize:vertical}
+  input::placeholder,textarea::placeholder{color:var(--faint)}
   .provider-picker{position:relative}
   .select-button{display:flex;align-items:center;justify-content:space-between;padding:0 12px;
     cursor:pointer;text-align:left}
@@ -86,6 +87,7 @@
     border-bottom:1.5px solid currentColor;transform:rotate(45deg);transition:transform .16s var(--ease);margin-right:3px}
   details[open] summary::after{transform:rotate(225deg)}
   details .field{margin:0 0 14px}
+  details .field-label{display:block;margin-bottom:7px}
   .hint{font-size:11px;color:var(--faint);margin:6px 0 0;line-height:1.4}
 
   .privacy{display:flex;gap:7px;align-items:flex-start;color:var(--faint);font-size:10.5px;
@@ -113,14 +115,14 @@
     <header>
       <div class="brand">
         <img src="icons/icon32.png" alt="">
-        <div class="brand-copy"><b>Quip</b><small>回复设置</small></div>
+        <div class="brand-copy"><b>Quip</b><small data-i18n="settingsSubtitle">Reply settings</small></div>
       </div>
-      <span class="ver">v0.1.2</span>
+      <span class="ver">v0.1.3</span>
     </header>
 
     <form id="settings">
       <div class="field">
-        <div class="label-row"><span class="field-label" id="providerLabel">模型</span></div>
+        <div class="label-row"><span class="field-label" id="providerLabel" data-i18n="modelLabel">Model</span></div>
         <select id="provider" class="sr-only" tabindex="-1" aria-hidden="true">
           <option value="deepseek">DeepSeek</option>
           <option value="openai">OpenAI</option>
@@ -142,12 +144,12 @@
       </div>
 
       <div class="field">
-        <div class="label-row"><span class="field-label" id="styleLabel">回复风格</span></div>
+        <div class="label-row"><span class="field-label" id="styleLabel" data-i18n="styleLabel">Reply style</span></div>
         <div class="style-picker" id="stylePicker" role="radiogroup" aria-labelledby="styleLabel">
-          <button type="button" class="style-option" role="radio" data-style="adaptive" aria-checked="true">自适应</button>
-          <button type="button" class="style-option" role="radio" data-style="funny" aria-checked="false">幽默</button>
-          <button type="button" class="style-option" role="radio" data-style="warm" aria-checked="false">真诚</button>
-          <button type="button" class="style-option" role="radio" data-style="sharp" aria-checked="false">犀利</button>
+          <button type="button" class="style-option" role="radio" data-style="adaptive" data-i18n="styleAdaptive" aria-checked="true">Adaptive</button>
+          <button type="button" class="style-option" role="radio" data-style="funny" data-i18n="styleFunny" aria-checked="false">Funny</button>
+          <button type="button" class="style-option" role="radio" data-style="warm" data-i18n="styleWarm" aria-checked="false">Warm</button>
+          <button type="button" class="style-option" role="radio" data-style="sharp" data-i18n="styleSharp" aria-checked="false">Sharp</button>
         </div>
       </div>
 
@@ -155,13 +157,13 @@
         <div class="label-row">
           <label for="key" id="keyLabel">API Key</label>
           <span class="key-actions">
-            <button class="test-key" id="testConnection" type="button"><span id="testLabel">测试连接</span></button>
+            <button class="test-key" id="testConnection" type="button"><span id="testLabel" data-i18n="testConnection">Test connection</span></button>
             <a id="keyLink" href="#" target="_blank">获取 Key →</a>
           </span>
         </div>
         <div class="key-wrap">
-          <input id="key" type="password" placeholder="粘贴 API Key" autocomplete="off" spellcheck="false">
-          <button type="button" class="key-toggle" id="keyToggle" aria-label="显示 API Key" aria-pressed="false" title="显示 API Key">
+          <input id="key" type="password" placeholder="Paste API Key" data-i18n-placeholder="keyPlaceholder" autocomplete="off" spellcheck="false">
+          <button type="button" class="key-toggle" id="keyToggle" aria-label="Show API Key" data-i18n-aria-label="showKey" aria-pressed="false" title="Show API Key" data-i18n-title="showKey">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="2.5"/></svg>
           </button>
         </div>
@@ -169,33 +171,38 @@
 
       <div class="option-row">
         <div class="option-copy">
-          <span id="visionLabel">读取推文图片</span>
-          <small id="visionSub">结合配图生成回复</small>
+          <span id="visionLabel" data-i18n="visionLabel">Read post images</span>
+          <small id="visionSub" data-i18n="visionEnabled">Use images when writing replies</small>
         </div>
         <button type="button" class="switch" id="visionSwitch" role="switch" aria-labelledby="visionLabel" aria-checked="false"></button>
       </div>
 
       <details>
-        <summary>高级设置</summary>
+        <summary data-i18n="advancedSettings">Advanced settings</summary>
         <div class="field">
-          <label for="model" class="field-label">自定义模型名</label>
-          <input id="model" type="text" placeholder="使用默认模型" spellcheck="false">
-          <p class="hint">留空即使用推荐的默认模型。</p>
+          <label for="model" class="field-label" data-i18n="customModel">Custom model name</label>
+          <input id="model" type="text" placeholder="Use default model" data-i18n-placeholder="defaultModelInput" spellcheck="false">
+          <p class="hint" data-i18n="defaultModelHint">Leave blank to use the recommended default.</p>
+        </div>
+        <div class="field">
+          <label for="voice" class="field-label" data-i18n="voiceLabel">My writing preferences</label>
+          <textarea id="voice" maxlength="1000" placeholder="Example: Indie developer; direct and calm, without internet slang. You can also paste a few replies you like." data-i18n-placeholder="voicePlaceholder" spellcheck="false"></textarea>
+          <p class="hint" data-i18n="voiceHint">Stored locally and used only to match your identity and tone.</p>
         </div>
       </details>
 
       <p class="privacy">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        Key 仅保存在本机；生成时，推文内容及已开启读取的图片会发送给所选模型商。
+        <span data-i18n="privacyText">Keys stay on this device. Post content and enabled images are sent to your selected AI provider when generating a reply.</span>
       </p>
 
-      <button class="save" id="save" type="submit"><span id="saveLabel">保存设置</span></button>
+      <button class="save" id="save" type="submit"><span id="saveLabel" data-i18n="saveSettings">Save settings</span></button>
       <span class="sr-only" id="status" role="status" aria-live="polite"></span>
     </form>
   </main>
 
   <footer>
-    <span>开源 · 自带 Key</span>
+    <span data-i18n="footerText">Open source · Bring your own key</span>
     <nav><a href="https://github.com/huccct/Quip" target="_blank">GitHub</a><a href="https://x.com/orion_c29" target="_blank">X</a></nav>
   </footer>
   <script src="popup.js"></script>

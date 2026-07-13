@@ -6,6 +6,16 @@ const META = {
   claude:   { name: 'Claude',   keys: 'https://console.anthropic.com/settings/keys', url: 'https://api.anthropic.com/v1/messages', model: 'claude-sonnet-5', vision: true },
 };
 
+function t(key, ...values) {
+  return (chrome.i18n.getMessage(key) || key).replace(/\{(\d+)\}/g, (_, index) => values[index] ?? '');
+}
+
+document.documentElement.lang = chrome.i18n.getUILanguage();
+document.querySelectorAll('[data-i18n]').forEach((node) => { node.textContent = t(node.dataset.i18n); });
+document.querySelectorAll('[data-i18n-placeholder]').forEach((node) => { node.placeholder = t(node.dataset.i18nPlaceholder); });
+document.querySelectorAll('[data-i18n-aria-label]').forEach((node) => { node.setAttribute('aria-label', t(node.dataset.i18nAriaLabel)); });
+document.querySelectorAll('[data-i18n-title]').forEach((node) => { node.title = t(node.dataset.i18nTitle); });
+
 const providerSel = document.getElementById('provider');
 const providerButton = document.getElementById('providerButton');
 const providerValue = document.getElementById('providerValue');
@@ -19,6 +29,7 @@ const keyToggle = document.getElementById('keyToggle');
 const testConnection = document.getElementById('testConnection');
 const testLabel = document.getElementById('testLabel');
 const modelInput = document.getElementById('model');
+const voiceInput = document.getElementById('voice');
 const visionSwitch = document.getElementById('visionSwitch');
 const visionSub = document.getElementById('visionSub');
 const save = document.getElementById('save');
@@ -32,11 +43,12 @@ let replyStyle = 'adaptive';
 let activeProvider = 'deepseek';
 let feedbackTimer;
 
-chrome.storage.local.get(['provider', 'apiKeys', 'modelOverride', 'readImages', 'replyStyle'], (r) => {
+chrome.storage.local.get(['provider', 'apiKeys', 'modelOverride', 'readImages', 'replyStyle', 'voiceProfile'], (r) => {
   apiKeys = r.apiKeys || {};
   modelOverride = r.modelOverride || {};
   readImages = !!r.readImages;
   replyStyle = r.replyStyle || 'adaptive';
+  voiceInput.value = r.voiceProfile || '';
   providerSel.value = r.provider || 'deepseek';
   activeProvider = providerSel.value;
   render();
@@ -51,25 +63,25 @@ function render() {
   keyLabel.textContent = m.name + ' API Key';
   keyInput.value = apiKeys[p] || '';
   keyLink.href = m.keys;
-  keyLink.textContent = `获取 ${m.name} Key →`;
+  keyLink.textContent = t('getProviderKey', m.name);
   modelInput.value = modelOverride[p] || '';
-  modelInput.placeholder = `默认 ${m.model}`;
-  testLabel.textContent = '测试连接';
+  modelInput.placeholder = t('defaultModel', m.model);
+  testLabel.textContent = t('testConnection');
 
   // 当前模型不支持读图 → 禁用开关并说明
   if (m.vision) {
     visionSwitch.disabled = false;
-    visionSub.textContent = modelInput.value.trim() ? '请确认自定义模型支持图片' : '让模型看懂配图再回';
+    visionSub.textContent = t(modelInput.value.trim() ? 'visionCustomModel' : 'visionModelEnabled');
   } else {
     visionSwitch.disabled = true;
-    visionSub.textContent = `${m.name} 暂不支持读图`;
+    visionSub.textContent = t('visionUnsupported', m.name);
   }
   visionSwitch.setAttribute('aria-checked', String(m.vision && readImages));
 }
 
 modelInput.addEventListener('input', () => {
   if (META[providerSel.value].vision) {
-    visionSub.textContent = modelInput.value.trim() ? '请确认自定义模型支持图片' : '让模型看懂配图再回';
+    visionSub.textContent = t(modelInput.value.trim() ? 'visionCustomModel' : 'visionModelEnabled');
   }
 });
 
@@ -112,8 +124,8 @@ keyToggle.addEventListener('click', () => {
   const show = keyInput.type === 'password';
   keyInput.type = show ? 'text' : 'password';
   keyToggle.setAttribute('aria-pressed', String(show));
-  keyToggle.setAttribute('aria-label', show ? '隐藏 API Key' : '显示 API Key');
-  keyToggle.title = show ? '隐藏 API Key' : '显示 API Key';
+  keyToggle.setAttribute('aria-label', t(show ? 'hideKey' : 'showKey'));
+  keyToggle.title = t(show ? 'hideKey' : 'showKey');
 });
 
 visionSwitch.addEventListener('click', () => {
@@ -127,10 +139,10 @@ testConnection.addEventListener('click', async () => {
   const cfg = META[provider];
   const key = keyInput.value.trim();
   const model = modelInput.value.trim() || cfg.model;
-  if (!key) { testLabel.textContent = '请先填写 Key'; return; }
+  if (!key) { testLabel.textContent = t('keyRequired'); return; }
 
   testConnection.disabled = true;
-  testLabel.textContent = '测试中…';
+  testLabel.textContent = t('testing');
   try {
     const isClaude = provider === 'claude';
     const body = isClaude
@@ -145,9 +157,9 @@ testConnection.addEventListener('click', async () => {
       body: JSON.stringify(body)
     });
     if (!res.ok) throw new Error(await readApiError(res));
-    testLabel.textContent = '连接正常 ✓';
+    testLabel.textContent = t('connectionOk');
   } catch (error) {
-    testLabel.textContent = `失败：${error.message.slice(0, 24)}`;
+    testLabel.textContent = t('connectionFailed', error.message.slice(0, 24));
   } finally {
     testConnection.disabled = false;
   }
@@ -169,16 +181,17 @@ document.getElementById('settings').addEventListener('submit', (event) => {
   apiKeys[p] = keyInput.value.trim();
   modelOverride[p] = modelInput.value.trim();
   readImages = META[p].vision && readImages;
-  chrome.storage.local.set({ provider: p, apiKeys, modelOverride, readImages, replyStyle }, () => {
+  const voiceProfile = voiceInput.value.trim().slice(0, 1000);
+  chrome.storage.local.set({ provider: p, apiKeys, modelOverride, readImages, replyStyle, voiceProfile }, () => {
     clearTimeout(feedbackTimer);
     const failed = chrome.runtime.lastError;
     save.classList.toggle('error', !!failed);
     save.classList.toggle('saved', !failed);
-    saveLabel.textContent = failed ? '保存失败，请重试' : '已保存';
+    saveLabel.textContent = t(failed ? 'saveFailed' : 'saved');
     status.textContent = saveLabel.textContent;
     feedbackTimer = setTimeout(() => {
       save.classList.remove('saved', 'error');
-      saveLabel.textContent = '保存设置';
+      saveLabel.textContent = t('saveSettings');
     }, 1600);
   });
 });

@@ -2,6 +2,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const test = require('node:test');
 const vm = require('node:vm');
+const ZH = JSON.parse(fs.readFileSync('_locales/zh_CN/messages.json', 'utf8'));
+const EN = JSON.parse(fs.readFileSync('_locales/en/messages.json', 'utf8'));
 
 class Element {
   constructor() {
@@ -20,9 +22,9 @@ class Element {
   focus() {}
 }
 
-function loadPopup(fetchResponse = { ok: true }) {
+function loadPopup(fetchResponse = { ok: true }, locale = ZH) {
   const ids = Object.fromEntries([
-    'provider', 'providerButton', 'providerValue', 'providerMenu', 'key', 'keyLabel', 'keyLink', 'keyToggle', 'testConnection', 'testLabel', 'model', 'visionSwitch',
+    'provider', 'providerButton', 'providerValue', 'providerMenu', 'key', 'keyLabel', 'keyLink', 'keyToggle', 'testConnection', 'testLabel', 'model', 'voice', 'visionSwitch',
     'visionSub', 'save', 'saveLabel', 'status', 'settings',
   ].map((id) => [id, new Element()]));
   const options = ['deepseek', 'openai', 'grok', 'claude'].map((value) => {
@@ -39,6 +41,7 @@ function loadPopup(fetchResponse = { ok: true }) {
   const requests = [];
   const chrome = {
     runtime: {},
+    i18n: { getMessage: (key) => locale[key]?.message || '', getUILanguage: () => locale === ZH ? 'zh-CN' : 'en' },
     storage: { local: {
       get: (_, done) => done({
         provider: 'deepseek',
@@ -46,13 +49,18 @@ function loadPopup(fetchResponse = { ok: true }) {
         modelOverride: {},
         readImages: true,
         replyStyle: 'adaptive',
+        voiceProfile: 'Direct and concise',
       }),
       set: (value, done) => { writes.push(value); done(); },
     } },
   };
   vm.runInNewContext(fs.readFileSync('popup.js', 'utf8'), {
     chrome,
-    document: { getElementById: (id) => ids[id], querySelectorAll: (selector) => selector === '.provider-option' ? options : styles, addEventListener() {} },
+    document: {
+      documentElement: {}, getElementById: (id) => ids[id],
+      querySelectorAll: (selector) => selector === '.provider-option' ? options : selector === '.style-option' ? styles : [],
+      addEventListener() {},
+    },
     fetch: async (url, request) => { requests.push({ url, body: JSON.parse(request.body) }); return fetchResponse; },
     setTimeout: () => 1,
     clearTimeout() {},
@@ -70,10 +78,12 @@ test('keeps provider drafts and saves a coherent image setting', () => {
 
   ids.visionSwitch.listeners.click();
   styles[1].listeners.click();
+  ids.voice.value = 'Builder; warm but concise';
   ids.settings.listeners.submit({ preventDefault() {} });
   assert.equal(writes[0].apiKeys.deepseek, 'edited-deep-key');
   assert.equal(writes[0].readImages, false);
   assert.equal(writes[0].replyStyle, 'funny');
+  assert.equal(writes[0].voiceProfile, 'Builder; warm but concise');
 });
 
 test('toggles API Key visibility accessibly', () => {
@@ -95,4 +105,11 @@ test('shows a readable connection error', async () => {
   const { ids } = loadPopup({ ok: false, status: 401, text: async () => '{"error":{"message":"Invalid API key"}}' });
   await ids.testConnection.listeners.click();
   assert.match(ids.testLabel.textContent, /Invalid API key/);
+});
+
+test('keeps English and Chinese locale keys aligned', () => {
+  assert.deepEqual(Object.keys(EN).sort(), Object.keys(ZH).sort());
+  const { ids } = loadPopup({ ok: true }, EN);
+  ids.keyToggle.listeners.click();
+  assert.equal(ids.keyToggle.attrs['aria-label'], 'Hide API Key');
 });

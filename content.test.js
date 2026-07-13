@@ -2,15 +2,17 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const test = require('node:test');
 const vm = require('node:vm');
+const ZH = JSON.parse(fs.readFileSync('_locales/zh_CN/messages.json', 'utf8'));
 
-function load(provider, requests, customDocument, replyStyle = 'adaptive') {
+function load(provider, requests, customDocument, replyStyle = 'adaptive', voiceProfile = '') {
   const context = {
     console,
     alert() {},
     navigator: { clipboard: { writeText: async () => {} } },
     chrome: {
       runtime: {},
-      storage: { local: { get: (_, done) => done({ provider, apiKeys: { [provider]: 'key' }, readImages: true, replyStyle }) } },
+      i18n: { getMessage: (key) => ZH[key]?.message || '' },
+      storage: { local: { get: (_, done) => done({ provider, apiKeys: { [provider]: 'key' }, readImages: true, replyStyle, voiceProfile }) } },
     },
     document: customDocument || {
       querySelector: () => null,
@@ -71,8 +73,9 @@ test('uses non-reasoning defaults for DeepSeek and Grok', async () => {
 
 test('applies the selected reply style', async () => {
   const requests = [];
-  await load('openai', requests, undefined, 'sharp')('tweet', []);
+  await load('openai', requests, undefined, 'sharp', 'Indie developer; direct and calm')('tweet', []);
   assert.match(requests[0].body.messages[0].content, /优先简洁犀利、观点鲜明/);
+  assert.match(requests[0].body.messages[0].content, /Indie developer; direct and calm/);
 });
 
 test('keeps outer and quoted tweet content separated', () => {
