@@ -98,6 +98,7 @@ test('tests the current key and default model', async () => {
   const { ids, requests } = loadPopup();
   await ids.testConnection.listeners.click();
   assert.equal(requests[0].body.model, 'deepseek-v4-flash');
+  assert.equal(requests[0].body.max_tokens, 16);
   assert.equal(ids.testLabel.textContent, '连接正常 ✓');
 });
 
@@ -105,6 +106,7 @@ test('shows a readable connection error', async () => {
   const { ids } = loadPopup({ ok: false, status: 401, text: async () => '{"error":{"message":"Invalid API key"}}' });
   await ids.testConnection.listeners.click();
   assert.match(ids.testLabel.textContent, /Invalid API key/);
+  assert.equal(ids.testConnection.title, 'Invalid API key');
 });
 
 test('keeps English and Chinese locale keys aligned', () => {

@@ -146,8 +146,8 @@ testConnection.addEventListener('click', async () => {
   try {
     const isClaude = provider === 'claude';
     const body = isClaude
-      ? { model, max_tokens: 1, thinking: { type: 'disabled' }, messages: [{ role: 'user', content: 'Hi' }] }
-      : { model, messages: [{ role: 'user', content: 'Hi' }], ...(provider === 'openai' ? { max_completion_tokens: 1 } : { max_tokens: 1 }) };
+      ? { model, max_tokens: 16, thinking: { type: 'disabled' }, messages: [{ role: 'user', content: 'Reply OK' }] }
+      : { model, messages: [{ role: 'user', content: 'Reply OK' }], ...(provider === 'openai' ? { max_completion_tokens: 64 } : { max_tokens: 16 }) };
     if (provider === 'openai' && model === cfg.model) body.reasoning_effort = 'minimal';
     const res = await fetch(cfg.url, {
       method: 'POST',
@@ -158,8 +158,10 @@ testConnection.addEventListener('click', async () => {
     });
     if (!res.ok) throw new Error(await readApiError(res));
     testLabel.textContent = t('connectionOk');
+    testConnection.title = '';
   } catch (error) {
-    testLabel.textContent = t('connectionFailed', error.message.slice(0, 24));
+    testLabel.textContent = t('connectionFailed', error.message.slice(0, 36));
+    testConnection.title = error.message;
   } finally {
     testConnection.disabled = false;
   }
