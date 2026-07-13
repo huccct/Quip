@@ -1,26 +1,98 @@
-// 落地页的演示：点「生成回复」后，逐字打出一条示例回复。
-// 纯前端演示，不调真 API —— 让访客直观感受"有梗"的效果。
-const REPLY = '7000到10000这段最难熬，互关来的粉大多是僵尸，真到万了你会发现活人还是那几百个 😅';
+// 落地页演示：轮播多组「推文 → Quip 回复」，每组展示一种钩子，
+// 顺带秀出「跟随语言」「看调性不硬玩梗」。纯前端，不调真 API。
+const EXAMPLES = [
+  {
+    name: 'Tunan', handle: '@orion_c29', time: '2h', color: '#1d2939', av: 'O',
+    stats: ['149', '12', '70'],
+    text: '想冲一万个蓝V关注，目前7000个，评论区留言互关一波，秒回。',
+    hook: '反常识真话',
+    reply: '7000到10000这段最难熬，互关来的粉大多是僵尸，真到万了你会发现活人还是那几百个 😅',
+  },
+  {
+    name: 'Tunan', handle: '@orion_c29', time: '5h', color: '#1d2939', av: 'O',
+    stats: ['88', '9', '512'],
+    text: 'shipped my side project after 3 months. 0 users so far lol',
+    hook: 'following the tweet language',
+    reply: '0 users on day one is just called "launching". the scary part is day 30 with the same number',
+  },
+  {
+    name: 'Tunan', handle: '@orion_c29', time: '1h', color: '#1d2939', av: 'O',
+    stats: ['23', '3', '41'],
+    text: '连续加班两周，今天终于把项目上线了，结果没人用，有点想放弃。',
+    hook: '看调性·不硬玩梗',
+    reply: '上线没人用太正常了，难的从来不是做出来，是做出来之后还愿意接着改。别急着下结论',
+  },
+  {
+    name: 'Tunan', handle: '@orion_c29', time: '3h', color: '#1d2939', av: 'O',
+    stats: ['205', '48', '1.2K'],
+    text: 'AIってもう人間の仕事全部奪うんじゃない？',
+    hook: '意外角度',
+    reply: '奪うっていうか、面倒な部分だけ持ってって、責任は全部こっちに残していく感じ',
+  },
+];
 
-const btn = document.getElementById('genBtn');
+const av = document.getElementById('twAv');
+const nameEl = document.getElementById('twName');
+const handleEl = document.getElementById('twHandle');
+const timeEl = document.getElementById('twTime');
+const textEl = document.getElementById('twText');
+const stR = document.getElementById('stR');
+const stT = document.getElementById('stT');
+const stL = document.getElementById('stL');
+const hookTag = document.getElementById('hookTag');
 const box = document.getElementById('replyBox');
+const btn = document.getElementById('genBtn');
+const genLabel = document.getElementById('genLabel');
 
-btn.addEventListener('click', () => {
+let idx = 0;
+
+function loadExample(i) {
+  const e = EXAMPLES[i];
+  av.innerHTML = '<img src="avatar.png" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+  av.style.background = 'transparent';
+  nameEl.textContent = e.name;
+  handleEl.textContent = e.handle;
+  timeEl.textContent = e.time;
+  textEl.textContent = e.text;
+  stR.textContent = e.stats[0];
+  stT.textContent = e.stats[1];
+  stL.textContent = e.stats[2];
+  hookTag.textContent = '';
+  box.classList.add('empty');
+  box.innerHTML = '点下面的按钮，看 Quip 怎么接<span class="cursor"></span>';
+  genLabel.textContent = '生成回复';
+}
+
+function typeReply(text) {
   btn.disabled = true;
   btn.style.opacity = '.5';
   box.classList.remove('empty');
   box.innerHTML = '<span class="cursor"></span>';
-
   let i = 0;
   const timer = setInterval(() => {
     i++;
-    box.innerHTML = REPLY.slice(0, i) + '<span class="cursor"></span>';
-    if (i >= REPLY.length) {
+    box.innerHTML = text.slice(0, i) + '<span class="cursor"></span>';
+    if (i >= text.length) {
       clearInterval(timer);
-      box.innerHTML = REPLY;
+      box.innerHTML = text;
+      hookTag.textContent = EXAMPLES[idx].hook;
       btn.disabled = false;
       btn.style.opacity = '1';
-      btn.querySelector('svg').nextSibling.textContent = ' 再来一条';
+      genLabel.textContent = '再来一条 →';
     }
-  }, 45);
+  }, 42);
+}
+
+btn.addEventListener('click', () => {
+  const shown = box.classList.contains('empty');
+  if (shown) {
+    // 还没生成 → 生成当前这条
+    typeReply(EXAMPLES[idx].reply);
+  } else {
+    // 已生成 → 换下一组
+    idx = (idx + 1) % EXAMPLES.length;
+    loadExample(idx);
+  }
 });
+
+loadExample(0);

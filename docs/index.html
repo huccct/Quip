@@ -45,12 +45,23 @@
   .demo{max-width:520px;margin:0 auto;border:1px solid var(--line);border-radius:18px;
     padding:22px;text-align:left;background:#fff;box-shadow:0 10px 40px rgba(11,13,18,.06)}
   .tw{display:flex;gap:12px}
-  .tw-av{width:42px;height:42px;border-radius:50%;background:var(--field);flex:0 0 auto}
-  .tw-name{font-weight:650;font-size:14.5px}
-  .tw-name span{color:var(--faint);font-weight:400;margin-left:5px}
-  .tw-text{font-size:15px;margin:3px 0 14px}
-  .reply{border-top:1px dashed var(--line);padding-top:14px;margin-top:2px}
-  .reply-lbl{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--blue);margin-bottom:8px;font-weight:600}
+  .tw-av{width:44px;height:44px;border-radius:50%;flex:0 0 auto;color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px}
+  .tw-main{flex:1;min-width:0}
+  .tw-name{display:flex;align-items:center;gap:4px;font-size:14.5px}
+  .tw-name b{font-weight:650}
+  .tw-name span{color:var(--faint);font-weight:400}
+  .tw-dot{margin:0 1px}
+  .tw-badge{flex:0 0 auto}
+  .tw-text{font-size:15.5px;line-height:1.55;margin:4px 0 12px}
+  .tw-stats{display:flex;gap:28px;color:var(--faint)}
+  .tw-stats span{display:flex;align-items:center;gap:6px;font-size:12.5px}
+  .tw-stats svg{width:15px;height:15px}
+  .tw-stats i{font-style:normal}
+  .reply{border-top:1px dashed var(--line);padding-top:15px;margin-top:15px}
+  .reply-lbl{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--blue);margin-bottom:9px;font-weight:600}
+  .hook-tag{color:var(--faint);font-weight:500;background:var(--field);
+    border-radius:100px;padding:2px 9px;font-size:11px}
   .reply-box{min-height:44px;font-size:15px;color:var(--ink)}
   .reply-box.empty{color:var(--faint)}
   .cursor{display:inline-block;width:2px;height:17px;background:var(--blue);
@@ -60,6 +71,7 @@
     background:var(--accent);color:#fff;border:none;border-radius:100px;padding:8px 15px;
     font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit}
   .quip-mini:hover{opacity:.9}
+  .demo-note{max-width:520px;margin:12px auto 0;text-align:center;font-size:12px;color:var(--faint)}
 
   /* sections */
   section{padding:64px 0;border-top:1px solid var(--line)}
@@ -80,8 +92,6 @@
     display:flex;align-items:center;justify-content:center}
   .step div b{font-size:15px}
   .step div p{font-size:14px;color:var(--muted)}
-  .note{margin-top:24px;font-size:13.5px;color:var(--muted);background:var(--field);
-    border:1px solid var(--field-line);border-radius:12px;padding:14px 16px}
 
   footer{border-top:1px solid var(--line);padding:32px 0;text-align:center;
     font-size:13.5px;color:var(--faint)}
@@ -109,9 +119,9 @@
       <h1>在推特上，<br>回一句<em>有梗</em>的话</h1>
       <p>Quip 帮你在任意推文下，一键生成一条有钩子、像真人的回复。告别一眼假的 AI 翻译腔。</p>
       <div class="cta">
-        <a class="btn btn-primary" href="#how">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          安装到 Chrome
+        <a class="btn btn-primary" href="quip.zip" download>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg>
+          下载插件
         </a>
         <a class="btn btn-ghost" href="https://github.com/huccct/Quip" target="_blank">看源码</a>
       </div>
@@ -119,36 +129,44 @@
 
     <div class="demo">
       <div class="tw">
-        <div class="tw-av"></div>
-        <div>
-          <div class="tw-name">飞凡<span>@feifan7686</span></div>
-          <div class="tw-text">想冲一万个蓝V关注，目前7000个，评论区留言互关一波，秒回。</div>
+        <div class="tw-av" id="twAv"></div>
+        <div class="tw-main">
+          <div class="tw-name"><b id="twName"></b><span id="twHandle"></span><span class="tw-dot">·</span><span id="twTime"></span>
+            <svg class="tw-badge" width="15" height="15" viewBox="0 0 22 22" fill="#1d9bf0"><path d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"/></svg>
+          </div>
+          <div class="tw-text" id="twText"></div>
+          <div class="tw-stats">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg><i id="stR"></i></span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 1l4 4-4 4M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4m14 0v2a4 4 0 01-4 4H3"/></svg><i id="stT"></i></span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.7l-1-1a5.5 5.5 0 00-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 000-7.8z"/></svg><i id="stL"></i></span>
+          </div>
         </div>
       </div>
       <div class="reply">
         <div class="reply-lbl">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>
-          Quip 生成
+          Quip 生成 <span class="hook-tag" id="hookTag"></span>
         </div>
         <div class="reply-box empty" id="replyBox">点下面的按钮，看 Quip 怎么接<span class="cursor"></span></div>
         <button class="quip-mini" id="genBtn">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg>
-          生成回复
+          <span id="genLabel">生成回复</span>
         </button>
       </div>
     </div>
+    <p class="demo-note">示例效果，帮你感受风格。实际回复由你选的模型现场生成。</p>
   </div>
 
   <div class="wrap">
     <section>
       <div class="kicker">为什么不一样</div>
-      <div class="s-title">两个 AI 吵一架，逼出人话</div>
-      <p class="s-lead">别的工具让 AI「礼貌回复」，结果一股翻译腔。Quip 内置<b>「写手 × 刷推老哥」双角色博弈</b>：写手先写，老哥用「这条我会不会点赞」把无聊的、尬玩梗的版本毙掉——只留下你真会发出去的那一句。</p>
+      <div class="s-title">先自己毙稿，只留你会发的那句</div>
+      <p class="s-lead">别的工具让 AI「礼貌回复」，结果一股翻译腔。Quip 的提示词逼模型先写一版，再换上<b>「刷推老哥」的眼睛自我审一遍</b>——用「这条我会不会点赞」把无聊的、尬玩梗的版本毙掉，只留下你真会发出去的那一句。</p>
       <div class="feats">
         <div class="feat"><h3>有钩子，不废话</h3><p>意外角度、反转、精准夸张、可共鸣的具体，挑最贴原推调性的。</p></div>
         <div class="feat"><h3>跟随原推语言</h3><p>中文推回中文，英文推回英文，自动判断。</p></div>
         <div class="feat"><h3>模型任选</h3><p>DeepSeek、OpenAI、Grok、Claude，填自己的 key，回复走你的额度。</p></div>
-        <div class="feat"><h3>发不发你说了算</h3><p>只把草稿填进回复框，真人点发，不碰自动化，合规。</p></div>
+        <div class="feat"><h3>发不发你说了算</h3><p>只把草稿填进回复框，不走自动化接口。发不发、发什么，都由你手点决定。</p></div>
       </div>
     </section>
 
@@ -156,11 +174,10 @@
       <div class="kicker">怎么用</div>
       <div class="s-title">三步装好，一下就会</div>
       <div class="steps">
-        <div class="step"><div><b>下载并加载</b><p>从 GitHub 下载解压，chrome://extensions 开「开发者模式」→ 加载已解压的扩展程序。</p></div></div>
+        <div class="step"><div><b>下载并加载</b><p>点上方「下载插件」得到 zip，解压。打开 chrome://extensions，开「开发者模式」→「加载已解压的扩展程序」→ 选解压出的文件夹。</p></div></div>
         <div class="step"><div><b>选模型、填 key</b><p>点 Quip 图标，选一个模型，填入它的 API key，保存。</p></div></div>
         <div class="step"><div><b>点开推文，一键回</b><p>回复框工具栏会出现 ✦ 按钮，点它生成，改一改，手点发。</p></div></div>
       </div>
-      <div class="note">💡 目前需开发者模式加载。上架 Chrome 应用商店后，普通用户点一下就能装 —— 正在路上。</div>
     </section>
   </div>
 
