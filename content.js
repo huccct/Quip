@@ -125,7 +125,7 @@ async function insertText(composer, text) {
 // model 是默认模型，用户可在 popup 里填「高级：模型名」覆盖。
 const PROVIDERS = {
   deepseek: { url: 'https://api.deepseek.com/chat/completions', model: 'deepseek-v4-flash', name: 'DeepSeek', vision: false },
-  openai:   { url: 'https://api.openai.com/v1/chat/completions', model: 'gpt-5.6-luna',                     name: 'OpenAI', vision: true },
+  openai:   { url: 'https://api.openai.com/v1/chat/completions', model: 'gpt-5-mini',                       name: 'OpenAI', vision: true },
   grok:     { url: 'https://api.x.ai/v1/chat/completions',       model: 'grok-4.3',                         name: 'Grok',   vision: true },
   claude:   { url: 'https://api.anthropic.com/v1/messages',      model: 'claude-sonnet-5',                  name: 'Claude', vision: true },
 };
@@ -248,7 +248,7 @@ async function generateReply(tweetText, images, onStatus) {
       messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content }],
     };
     if (provider === 'openai') {
-      body.reasoning_effort = 'none';
+      if (model === cfg.model) body.reasoning_effort = 'minimal';
       body.max_completion_tokens = 200;
     } else {
       body.max_tokens = 200;
@@ -266,9 +266,9 @@ async function generateReply(tweetText, images, onStatus) {
   }
 
   if (!res.ok) {
-    const err = await res.text();
+    const err = await readApiError(res);
     if (useImages) onStatus?.(`图片请求失败 · ${cfg.name} ${res.status}`, 'error', 3200);
-    alert(`${cfg.name} 报错：${res.status}\n${err.slice(0, 200)}`);
+    alert(`${cfg.name} 请求失败（${res.status}）：${err}`);
     return null;
   }
   if (useImages) onStatus?.(`✓ ${images.length} 张图已随请求发送给 ${cfg.name}`, 'success', 3200);
@@ -278,6 +278,16 @@ async function generateReply(tweetText, images, onStatus) {
     return data.content?.[0]?.text?.trim() || null;
   }
   return data.choices?.[0]?.message?.content?.trim() || null;
+}
+
+async function readApiError(response) {
+  const raw = await response.text();
+  try {
+    const data = JSON.parse(raw);
+    return (data.error?.message || data.message || raw).slice(0, 200);
+  } catch {
+    return raw.slice(0, 200) || '未知错误';
+  }
 }
 
 // ---- 只在“回复场景”注入，不在“发原创推”场景注入 ----

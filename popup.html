@@ -29,6 +29,9 @@
   label,.field-label{font-size:12px;font-weight:600;color:#343840}
   .label-row a{font-size:11px;color:var(--muted);text-decoration:none}
   .label-row a:hover{color:var(--text)}
+  .key-actions{display:flex;align-items:center;gap:10px}
+  .test-key{padding:0;border:0;background:transparent;color:var(--blue);font-size:11px;cursor:pointer}
+  .test-key:disabled{color:var(--faint);cursor:default}
 
   input,.select-button{width:100%;height:42px;border:1px solid var(--line);border-radius:var(--radius);
     background:var(--surface);color:var(--text);font-size:13px;transition:.16s var(--ease)}
@@ -112,7 +115,7 @@
         <img src="icons/icon32.png" alt="">
         <div class="brand-copy"><b>Quip</b><small>回复设置</small></div>
       </div>
-      <span class="ver">v0.1.0</span>
+      <span class="ver">v0.1.1</span>
     </header>
 
     <form id="settings">
@@ -151,7 +154,10 @@
       <div class="field">
         <div class="label-row">
           <label for="key" id="keyLabel">API Key</label>
-          <a id="keyLink" href="#" target="_blank">获取 Key →</a>
+          <span class="key-actions">
+            <button class="test-key" id="testConnection" type="button"><span id="testLabel">测试连接</span></button>
+            <a id="keyLink" href="#" target="_blank">获取 Key →</a>
+          </span>
         </div>
         <div class="key-wrap">
           <input id="key" type="password" placeholder="粘贴 API Key" autocomplete="off" spellcheck="false">

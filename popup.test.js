@@ -20,9 +20,9 @@ class Element {
   focus() {}
 }
 
-function loadPopup() {
+function loadPopup(fetchResponse = { ok: true }) {
   const ids = Object.fromEntries([
-    'provider', 'providerButton', 'providerValue', 'providerMenu', 'key', 'keyLabel', 'keyLink', 'keyToggle', 'model', 'visionSwitch',
+    'provider', 'providerButton', 'providerValue', 'providerMenu', 'key', 'keyLabel', 'keyLink', 'keyToggle', 'testConnection', 'testLabel', 'model', 'visionSwitch',
     'visionSub', 'save', 'saveLabel', 'status', 'settings',
   ].map((id) => [id, new Element()]));
   const options = ['deepseek', 'openai', 'grok', 'claude'].map((value) => {
@@ -36,6 +36,7 @@ function loadPopup() {
     return option;
   });
   const writes = [];
+  const requests = [];
   const chrome = {
     runtime: {},
     storage: { local: {
@@ -52,10 +53,11 @@ function loadPopup() {
   vm.runInNewContext(fs.readFileSync('popup.js', 'utf8'), {
     chrome,
     document: { getElementById: (id) => ids[id], querySelectorAll: (selector) => selector === '.provider-option' ? options : styles, addEventListener() {} },
+    fetch: async (url, request) => { requests.push({ url, body: JSON.parse(request.body) }); return fetchResponse; },
     setTimeout: () => 1,
     clearTimeout() {},
   });
-  return { ids, options, styles, writes };
+  return { ids, options, styles, writes, requests };
 }
 
 test('keeps provider drafts and saves a coherent image setting', () => {
@@ -80,4 +82,17 @@ test('toggles API Key visibility accessibly', () => {
   assert.equal(ids.key.type, 'text');
   assert.equal(ids.keyToggle.attrs['aria-pressed'], 'true');
   assert.equal(ids.keyToggle.attrs['aria-label'], '隐藏 API Key');
+});
+
+test('tests the current key and default model', async () => {
+  const { ids, requests } = loadPopup();
+  await ids.testConnection.listeners.click();
+  assert.equal(requests[0].body.model, 'deepseek-v4-flash');
+  assert.equal(ids.testLabel.textContent, '连接正常 ✓');
+});
+
+test('shows a readable connection error', async () => {
+  const { ids } = loadPopup({ ok: false, status: 401, text: async () => '{"error":{"message":"Invalid API key"}}' });
+  await ids.testConnection.listeners.click();
+  assert.match(ids.testLabel.textContent, /Invalid API key/);
 });
