@@ -25,7 +25,7 @@ Quip uses a **writer × editor review flow**: it drafts several angles internall
 - **Context-aware** — witty when appropriate, sincere or useful when the post is serious
 - **Four styles** — Adaptive, Funny, Warm, and Sharp
 - **Personal voice** — add a short profile or a few example replies to guide wording and perspective
-- **Fuller context** — reads images, video covers, and nested quoted posts, with visible image-delivery status
+- **Fuller context** — reads recent parent posts, images, video covers, and nested quoted posts
 - **Language matching** — replies in the original post's language
 - **Multiple providers** — DeepSeek, OpenAI, Grok, and Claude with your own API key
 - **You stay in control** — Quip fills the draft; you edit and send it
@@ -48,7 +48,6 @@ Click again if you want another version.
 
 ## Roadmap
 
-- [ ] Better conversation-thread context
 - [ ] Quick style switching beside the reply box
 - [ ] Optional hosted credits for people who do not want to bring an API key
 

@@ -20,6 +20,7 @@ function load(provider, requests, customDocument, replyStyle = 'adaptive', voice
       getElementById: () => ({ id: 'xqr-style' }),
       body: {},
     },
+    location: { pathname: customDocument?.pathname || '/home' },
     MutationObserver: class { observe() {} },
     fetch: async (url, options) => {
       requests.push({ url, body: JSON.parse(options.body) });
@@ -76,6 +77,8 @@ test('applies the selected reply style', async () => {
   await load('openai', requests, undefined, 'sharp', 'Indie developer; direct and calm')('tweet', []);
   assert.match(requests[0].body.messages[0].content, /优先简洁犀利、观点鲜明/);
   assert.match(requests[0].body.messages[0].content, /Indie developer; direct and calm/);
+  assert.match(requests[0].body.messages[0].content, /不是 AI 助手、客服、主持人、旁观评论员或原推作者/);
+  assert.match(requests[0].body.messages[0].content, /不要声称用户有某段经历、职业、关系、产品或立场/);
 });
 
 test('keeps outer and quoted tweet content separated', () => {
@@ -111,7 +114,26 @@ test('keeps outer and quoted tweet content separated', () => {
   assert.match(read.text, /<tweet>\n作者：外层作者\n外层正文/);
   assert.match(read.text, /链接卡片：链接摘要/);
   assert.match(read.text, /<quoted_tweet>\n作者：引用作者\n引用正文/);
+  assert.doesNotMatch(read.text, /<conversation_context>/);
   assert.deepEqual(Array.from(read.images, (item) => item.label), [
     '外层推文配图', '外层推文视频/GIF 封面', '外层推文链接卡片图片', '引用推文配图',
   ]);
+});
+
+test('reads only adjacent parent posts on a status detail page', () => {
+  const makeArticle = (author, text) => ({
+    closest: (selector) => selector.includes('primaryColumn') ? primary : null,
+    querySelectorAll: (selector) => selector === '[role="link"]' ? []
+      : selector.includes('tweetText') ? [{ innerText: text }]
+      : selector.includes('User-Name') ? [{ innerText: author }] : [],
+  });
+  const parent1 = makeArticle('A', 'first parent');
+  const parent2 = makeArticle('B', 'second parent');
+  const source = makeArticle('C', 'target post');
+  const primary = { querySelectorAll: () => [parent1, parent2, source] };
+  const toolbar = { closest: (selector) => selector.includes('article') ? source : null };
+  const document = { pathname: '/someone/status/123', querySelector: () => null, querySelectorAll: () => [], getElementById: () => ({ id: 'xqr-style' }), body: {} };
+  const read = load('openai', [], document).readTweetContext(toolbar);
+
+  assert.match(read.text, /<conversation_context>[\s\S]*first parent[\s\S]*second parent[\s\S]*<tweet>[\s\S]*target post/);
 });

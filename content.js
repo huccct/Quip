@@ -49,6 +49,23 @@ function findQuotedTweet(article) {
   ) || null;
 }
 
+function findParentArticles(toolbar, article) {
+  if (toolbar.closest('[role="dialog"]') || !/\/status\/\d+/.test(globalThis.location?.pathname || '')) return [];
+  const primary = article.closest?.('[data-testid="primaryColumn"]');
+  if (!primary) return [];
+  const articles = [...primary.querySelectorAll('article[data-testid="tweet"]')];
+  const index = articles.indexOf(article);
+  // ponytail: X 在详情页把父级紧邻放在目标推文前；若 DOM 失去这个约定，再改用接口中的 conversation id。
+  return index > 0 ? articles.slice(Math.max(0, index - 3), index) : [];
+}
+
+function basicTweetText(article) {
+  const quote = findQuotedTweet(article);
+  const text = firstText(article, '[data-testid="tweetText"]', quote);
+  const author = firstText(article, '[data-testid="User-Name"]', quote);
+  return `${author ? `作者：${author}\n` : ''}${text || '（无正文）'}`;
+}
+
 function collectMedia(root, excludedRoot, prefix) {
   const items = [];
   const add = (url, label) => {
@@ -82,6 +99,10 @@ function readTweetContext(toolbar) {
   const sections = [
     `<tweet>\n${outerAuthor ? `作者：${outerAuthor}\n` : ''}${outerText || '（无正文）'}${cardText ? `\n链接卡片：${cardText}` : ''}\n</tweet>`,
   ];
+  const parents = findParentArticles(toolbar, article);
+  if (parents.length) {
+    sections.unshift(`<conversation_context>\n${parents.map((parent) => `<parent_tweet>\n${basicTweetText(parent)}\n</parent_tweet>`).join('\n')}\n</conversation_context>`);
+  }
   if (quote && (quoteText || quoteAuthor)) {
     sections.push(`<quoted_tweet>\n${quoteAuthor ? `作者：${quoteAuthor}\n` : ''}${quoteText || '（无正文）'}\n</quoted_tweet>`);
   }
@@ -189,13 +210,20 @@ async function generateReply(tweetText, images, onStatus) {
   else onStatus?.(t('noImages'), 'muted', 2600);
 
   // 写手先出不同角度，编辑再按语境筛选；模型只返回终稿。
-  const systemPrompt = `你是擅长社交媒体短回复的写手兼编辑。目标是写出贴合语境、自然、有记忆点的回复，而不是刻意搞笑。
+  const systemPrompt = `你正在代替用户在 X 上直接回复 <tweet> 的作者。输出必须像用户亲自参与对话，而不是 AI 助手、客服、主持人、旁观评论员或原推作者。
+你在内部是写手兼编辑，目标是写出贴合语境、自然、有记忆点的回复，但不能在输出中暴露这个身份。
 
 本次风格：${REPLY_STYLES[replyStyle]}
 ${voiceProfile ? `\n用户表达偏好（仅用于措辞和视角）：\n<voice_profile>\n${voiceProfile}\n</voice_profile>\n` : ''}
 
+身份边界：
+- <voice_profile> 描述的是正在回复的用户，不是 <tweet> 或 <quoted_tweet> 的作者。
+- 除非 <voice_profile> 明确支持，否则不要声称用户有某段经历、职业、关系、产品或立场。
+- 直接对原作者说话；不要用“这位作者”“这条内容认为”等旁观式表述，也不要替原作者自述。
+
 先在内部完成：
 1. 判断原推的语言、真实意图和情绪；图片也是原推内容。
+   <conversation_context> 是按时间排列的父级对话，只用于理解上下文；你仍然是在回复 <tweet>。
    <quoted_tweet> 是外层推文引用的内容，要结合两者关系理解，不要混成同一位作者的话。
 2. 从意外视角、自然反转、精准夸张、具体共鸣、反常识真话中，默想 3 个不同角度；不适合玩梗时就真诚或直接提供价值。
 3. 以挑剔读者的视角淘汰误读、复述原推、泛泛附和、编造事实、冒犯、说教、陈词滥调和用力过猛的版本，选出最自然的一条并润色。
