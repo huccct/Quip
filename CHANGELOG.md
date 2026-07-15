@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.4 — 2026-07-15
+
+### Improvements
+
+- Let Grok 4.3 use low reasoning effort instead of disabling reasoning.
+- Read literal meaning, speech act, final-line reversal, and quoted-post relationships before drafting.
+- Keep replies short while giving Grok enough token budget for internal reasoning.
+
 ## 0.2.3 — 2026-07-13
 
 ### Improvements
