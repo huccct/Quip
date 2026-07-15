@@ -53,14 +53,14 @@ test('sends Claude images with a system prompt', async () => {
   assert.equal(requests[0].body.model, 'claude-sonnet-5');
   assert.equal(requests[0].body.thinking.type, 'disabled');
   assert.equal(requests[0].body.max_tokens, 120);
-  assert.match(requests[0].body.system, /写手兼编辑/);
+  assert.match(requests[0].body.system, /图片属于相应帖子，也是正文的一部分/);
   assert.equal(requests[0].body.messages[0].content[0].text, '外层推文配图');
   assert.equal(requests[0].body.messages[0].content[1].type, 'image');
   assert.match(statuses[0][0], /发送 2 条父级对话、1 张图片/);
   assert.match(statuses.at(-1)[0], /请求中包含 2 条父级对话、1 张图片/);
 });
 
-test('uses non-reasoning defaults for DeepSeek and Grok', async () => {
+test('keeps DeepSeek cheap and gives Grok enough reasoning to understand posts', async () => {
   const deepseek = [];
   await load('deepseek', deepseek)('tweet', []);
   assert.equal(deepseek[0].body.model, 'deepseek-v4-flash');
@@ -69,7 +69,8 @@ test('uses non-reasoning defaults for DeepSeek and Grok', async () => {
   const grok = [];
   await load('grok', grok)('tweet', []);
   assert.equal(grok[0].body.model, 'grok-4.3');
-  assert.equal(grok[0].body.reasoning_effort, 'none');
+  assert.equal(grok[0].body.reasoning_effort, 'low');
+  assert.equal(grok[0].body.max_tokens, 300);
   assert.equal(grok[0].body.thinking, undefined);
 });
 
@@ -78,16 +79,12 @@ test('applies the selected reply style', async () => {
   await load('openai', requests, undefined, 'sharp', 'Indie developer; direct and calm')('tweet', []);
   assert.match(requests[0].body.messages[0].content, /点出原文真正的矛盾、代价或反差/);
   assert.match(requests[0].body.messages[0].content, /Indie developer; direct and calm/);
-  assert.match(requests[0].body.messages[0].content, /不是 AI 助手、客服、主持人、旁观评论员或原推作者/);
-  assert.match(requests[0].body.messages[0].content, /不要声称用户有某段经历、职业、关系、产品或立场/);
-  assert.match(requests[0].body.messages[0].content, /不猜动机、背景、因果、结果或未展示的细节/);
-  assert.match(requests[0].body.messages[0].content, /作者此刻是在分享、吐槽、自嘲、炫耀、求助、提问、宣布还是抛梗/);
-  assert.match(requests[0].body.messages[0].content, /笑点必须来自原文，不能贴现成梗/);
-  assert.match(requests[0].body.messages[0].content, /放到很多别的推文下面也成立：太泛，淘汰/);
-  assert.match(requests[0].body.messages[0].content, /我反正、我一直、我也经历过/);
+  assert.match(requests[0].body.messages[0].content, /反问不要自动当成真问题回答/);
+  assert.match(requests[0].body.messages[0].content, /末句可能推翻前文的抱怨，形成真正立场/);
+  assert.match(requests[0].body.messages[0].content, /不要把引用作者的观点算到目标作者头上/);
+  assert.match(requests[0].body.messages[0].content, /我一直、我也经历过、我反正/);
   assert.match(requests[0].body.messages[0].content, /两小时成功预约了下一个两小时/);
-  assert.match(requests[0].body.messages[0].content, /不要以“确实”“真的”“不得不说”/);
-  assert.match(requests[0].body.messages[0].content, /中文优先 8–28 字、不得超过 40 字/);
+  assert.match(requests[0].body.messages[0].content, /中文优先 8–28 字且不超过 40 字/);
 });
 
 test('keeps outer and quoted tweet content separated', () => {
