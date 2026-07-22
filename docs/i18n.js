@@ -11,7 +11,7 @@ const ZH = {
   styleTitle: '四种回复风格', styleText: '自适应、幽默、真诚、犀利；同一条推文，也能选择不同表达。',
   voiceTitle: '更像你的语气', voiceText: '填写一段表达偏好或几条示例回复，让 Quip 贴近你的措辞和视角。',
   languageTitle: '跟随原推语言', languageText: '中文推回中文，英文推回英文，自动判断。',
-  contextTitle: '理解完整对话', contextText: '结合最近父级对话、配图、视频封面和嵌套引用理解上下文。',
+  contextTitle: '理解完整对话', contextText: '结合父级对话、配图和嵌套引用理解上下文，生成前还能预览实际读取内容。',
   modelsTitle: '模型任选', modelsText: 'DeepSeek、OpenAI、Grok、Claude，填自己的 Key，回复走你的额度。',
   controlTitle: '发不发你说了算', controlText: '只把草稿填进回复框，由你修改和发送。',
   howKicker: '怎么用', howTitle: '三步装好，一下就会',

@@ -27,6 +27,7 @@ Quip first identifies what the author is doing—sharing, venting, joking, askin
 - **Four styles** — Adaptive, Funny, Warm, and Sharp
 - **Personal voice** — add a short profile or a few example replies to guide wording and perspective
 - **Fuller context** — reads recent parent posts, images, video covers, and nested quoted posts
+- **Context preview** — inspect exactly what Quip read before generating
 - **Language matching** — replies in the original post's language
 - **Multiple providers** — DeepSeek, OpenAI, Grok, and Claude with your own API key
 - **You stay in control** — Quip fills the draft; you edit and send it

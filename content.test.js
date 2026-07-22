@@ -29,8 +29,9 @@ function load(provider, requests, customDocument, replyStyle = 'adaptive', voice
         : { ok: true, json: async () => ({ choices: [{ message: { content: 'reply' } }] }) };
     },
   };
-  vm.runInNewContext(`${fs.readFileSync('content.js', 'utf8')}\nthis.generateReply = generateReply; this.readTweetContext = readTweetContext;`, context);
+  vm.runInNewContext(`${fs.readFileSync('content.js', 'utf8')}\nthis.generateReply = generateReply; this.readTweetContext = readTweetContext; this.contextPreviewText = contextPreviewText;`, context);
   context.generateReply.readTweetContext = context.readTweetContext;
+  context.generateReply.contextPreviewText = context.contextPreviewText;
   return context.generateReply;
 }
 
@@ -145,4 +146,9 @@ test('reads only adjacent parent posts on a status detail page', () => {
 
   assert.match(read.text, /<conversation_context>[\s\S]*first parent[\s\S]*second parent[\s\S]*<tweet>[\s\S]*target post/);
   assert.equal(read.parentCount, 2);
+});
+
+test('formats structured context for human preview', () => {
+  const preview = load('openai', [], undefined).contextPreviewText('<conversation_context>\n<parent_tweet>parent</parent_tweet>\n</conversation_context>\n\n<tweet>target</tweet>');
+  assert.equal(preview, 'parent\n\ntarget');
 });

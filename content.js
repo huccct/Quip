@@ -368,6 +368,33 @@ function showImageStatus(btn, text, tone = 'info', duration = 0) {
   }, duration);
 }
 
+function contextPreviewText(text) {
+  return text.replace(/<\/?(?:conversation_context|parent_tweet|tweet|quoted_tweet)>/g, '').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+function showContextPreview(tweet) {
+  const dialog = document.createElement('dialog');
+  dialog.className = 'xqr-context-dialog';
+
+  const title = document.createElement('strong');
+  title.textContent = t('contextPreviewTitle');
+  const summary = document.createElement('span');
+  summary.textContent = t('contextPreviewSummary', tweet.parentCount, tweet.images.length);
+  const text = document.createElement('pre');
+  text.textContent = contextPreviewText(tweet.text);
+  const media = document.createElement('small');
+  if (tweet.images.length) media.textContent = t('contextPreviewImages', tweet.images.map((image) => image.label).join('、'));
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.textContent = t('closePreview');
+  close.addEventListener('click', () => dialog.close());
+
+  dialog.append(title, summary, text, media, close);
+  dialog.addEventListener('close', () => dialog.remove());
+  document.body.appendChild(dialog);
+  dialog.showModal();
+}
+
 function injectInlineButton(toolbar) {
   const composer = findComposer(toolbar);
   if (!composer) return;
@@ -388,6 +415,26 @@ function injectInlineButton(toolbar) {
   });
   btn.addEventListener('mouseenter', () => { btn.style.background = 'rgba(29,155,240,.1)'; });
   btn.addEventListener('mouseleave', () => { btn.style.background = 'transparent'; });
+
+  const previewBtn = document.createElement('button');
+  previewBtn.className = 'xqr-context-btn';
+  previewBtn.type = 'button';
+  previewBtn.title = t('previewContext');
+  previewBtn.innerHTML = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/></svg>`;
+  Object.assign(previewBtn.style, {
+    background: 'transparent', color: 'rgb(83,100,113)', border: 'none', borderRadius: '50%',
+    width: '30px', height: '30px', padding: '0', display: 'inline-flex', alignItems: 'center',
+    justifyContent: 'center', cursor: 'pointer', transition: 'background .15s', flex: '0 0 auto'
+  });
+  previewBtn.addEventListener('mouseenter', () => { previewBtn.style.background = 'rgba(83,100,113,.1)'; });
+  previewBtn.addEventListener('mouseleave', () => { previewBtn.style.background = 'transparent'; });
+  previewBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const tweet = readTweetContext(toolbar);
+    if (!tweet.text && tweet.images.length === 0) { alert(t('postNotFound')); return; }
+    showContextPreview(tweet);
+  });
 
   btn.addEventListener('click', async (e) => {
     e.preventDefault();
@@ -422,10 +469,11 @@ function injectInlineButton(toolbar) {
   // 而不是 toolbar 根部（那样会跑到 Reply 右边）。
   const iconGroup = toolbar.firstElementChild;
   if (iconGroup && iconGroup.contains(toolbar.querySelector('[aria-label], button, [role="button"]'))) {
-    iconGroup.appendChild(btn);
+    iconGroup.append(previewBtn, btn);
   } else {
     // 兜底：找不到图标组就退回工具栏，但插在最前，避免跑到 Reply 右边
     toolbar.insertBefore(btn, toolbar.firstChild);
+    toolbar.insertBefore(previewBtn, btn);
   }
 }
 
@@ -441,6 +489,11 @@ if (!document.getElementById('xqr-style')) {
     @keyframes xqr-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
     .xqr-status{position:fixed;z-index:2147483647;max-width:242px;padding:8px 11px;border:1px solid rgba(255,255,255,.14);border-radius:10px;background:#19202a;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.2);font:500 12px/1.35 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;pointer-events:none;animation:xqr-status-in .16s ease-out}
     .xqr-status-success{background:#137333}.xqr-status-muted{background:#53606f}.xqr-status-error{background:#b42318}
+    .xqr-context-dialog{width:min(520px,calc(100vw - 32px));max-height:70vh;padding:18px;border:1px solid #cfd9de;border-radius:16px;background:#fff;color:#0f1419;box-shadow:0 18px 60px rgba(0,0,0,.25);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    .xqr-context-dialog::backdrop{background:rgba(0,0,0,.45)}
+    .xqr-context-dialog strong,.xqr-context-dialog span,.xqr-context-dialog small{display:block}.xqr-context-dialog span{margin-top:4px;color:#536471;font-size:12px}
+    .xqr-context-dialog pre{max-height:45vh;margin:14px 0;padding:12px;border-radius:10px;background:#f7f9f9;overflow:auto;white-space:pre-wrap;word-break:break-word;font:13px/1.5 inherit}
+    .xqr-context-dialog small{margin-bottom:12px;color:#536471}.xqr-context-dialog button{float:right;padding:7px 14px;border:0;border-radius:999px;background:#0f1419;color:#fff;font-weight:700;cursor:pointer}
     @keyframes xqr-status-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
   `;
   document.head.appendChild(style);

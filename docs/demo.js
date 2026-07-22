@@ -5,9 +5,9 @@ const EXAMPLES = [
   {
     name: 'Tunan', handle: '@orion_c29', time: '2h', color: '#1d2939', av: 'O',
     stats: ['149', '12', '70'],
-    text: '想冲一万个蓝V关注，目前7000个，评论区留言互关一波，秒回。',
-    hook: { zh: '反常识真话', en: 'Counterintuitive truth' },
-    reply: '互关涨的是数字，留住人的还得是内容',
+    text: '做了个浏览器插件，本来只想自己用，结果每天用得最勤的还是我。',
+    hook: { zh: '具体回扣', en: 'Specific callback' },
+    reply: '最稳定的 PMF：先把自己服务明白',
   },
   {
     name: 'Tunan', handle: '@orion_c29', time: '5h', color: '#1d2939', av: 'O',
