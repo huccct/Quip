@@ -60,11 +60,13 @@ test('sends Claude images with a system prompt', async () => {
   assert.match(statuses.at(-1)[0], /请求中包含 2 条父级对话、1 张图片/);
 });
 
-test('keeps DeepSeek cheap and gives Grok enough reasoning to understand posts', async () => {
+test('gives DeepSeek and Grok enough reasoning to understand posts', async () => {
   const deepseek = [];
   await load('deepseek', deepseek)('tweet', []);
   assert.equal(deepseek[0].body.model, 'deepseek-v4-flash');
-  assert.equal(deepseek[0].body.thinking.type, 'disabled');
+  assert.equal(deepseek[0].body.thinking.type, 'enabled');
+  assert.equal(deepseek[0].body.reasoning_effort, 'high');
+  assert.equal(deepseek[0].body.max_tokens, 512);
 
   const grok = [];
   await load('grok', grok)('tweet', []);

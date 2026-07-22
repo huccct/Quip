@@ -295,7 +295,11 @@ ${voiceProfile ? `- <voice_profile> 是回复者本人的表达偏好：\n<voice
       body.max_completion_tokens = MAX_REPLY_TOKENS;
     } else {
       body.max_tokens = MAX_REPLY_TOKENS;
-      if (provider === 'deepseek') body.thinking = { type: 'disabled' };
+      if (provider === 'deepseek') {
+        body.thinking = { type: 'enabled' };
+        body.reasoning_effort = 'high';
+        body.max_tokens = 512; // ponytail: 思考和终稿共用预算，终稿长度仍由提示词限制。
+      }
       if (provider === 'grok') {
         body.reasoning_effort = 'low';
         body.max_tokens = 300; // ponytail: 给低推理留预算，最终回复长度仍由提示词限制。
