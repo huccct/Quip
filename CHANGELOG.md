@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.0 — 2026-07-22
+
+### Features
+
+- Add direct Gemini support with multimodal input.
+- Add OpenRouter Auto for access to a wider model catalog through one key.
+- Rewrite a generated draft in one click: Shorter, Natural, or Wittier.
+
+### Improvements
+
+- Update setup instructions for automatic saving.
+- Keep quick rewrites grounded in both the source post and current draft.
+
 ## 0.3.1 — 2026-07-22
 
 ### Improvements
