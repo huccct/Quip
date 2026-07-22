@@ -27,7 +27,7 @@ function loadPopup(fetchResponse = { ok: true }, locale = ZH) {
     'provider', 'providerButton', 'providerValue', 'providerMenu', 'key', 'keyLink', 'keyToggle', 'testConnection', 'testLabel', 'model', 'voice', 'visionSwitch',
     'visionSub', 'status', 'settings',
   ].map((id) => [id, new Element()]));
-  const options = ['deepseek', 'openai', 'grok', 'claude'].map((value) => {
+  const options = ['deepseek', 'openai', 'grok', 'claude', 'gemini', 'openrouter'].map((value) => {
     const option = new Element();
     option.dataset.value = value;
     return option;
@@ -102,6 +102,18 @@ test('tests the current key and default model', async () => {
   assert.equal(requests[0].body.model, 'deepseek-v4-flash');
   assert.equal(requests[0].body.max_tokens, 16);
   assert.equal(ids.testLabel.textContent, '连接正常 ✓');
+});
+
+test('offers Gemini and OpenRouter defaults', async () => {
+  const { ids, options, requests } = loadPopup();
+  options[4].listeners.click();
+  ids.key.value = 'gemini-key';
+  await ids.testConnection.listeners.click();
+  assert.equal(requests[0].url, 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions');
+  assert.equal(requests[0].body.model, 'gemini-3.5-flash-lite');
+
+  options[5].listeners.click();
+  assert.equal(ids.model.placeholder, '默认 openrouter/auto');
 });
 
 test('shows a readable connection error', async () => {

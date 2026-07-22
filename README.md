@@ -25,11 +25,12 @@ Quip first identifies what the author is doing—sharing, venting, joking, askin
 - **Understands the point** — responds to a concrete detail, implication, contrast, or callback instead of paraphrasing the post
 - **Context-aware** — witty when appropriate, sincere or useful when the post is serious
 - **Four styles** — Adaptive, Funny, Warm, and Sharp
+- **Quick rewrites** — make a draft Shorter, Natural, or Wittier without reopening settings
 - **Personal voice** — add a short profile or a few example replies to guide wording and perspective
 - **Fuller context** — reads recent parent posts, images, video covers, and nested quoted posts
 - **Context preview** — inspect exactly what Quip read before generating
 - **Language matching** — replies in the original post's language
-- **Multiple providers** — DeepSeek, OpenAI, Grok, and Claude with your own API key
+- **Multiple providers** — DeepSeek, OpenAI, Grok, Claude, Gemini, and OpenRouter with your own API key
 - **You stay in control** — Quip fills the draft; you edit and send it
 - **No custom backend** — keys stay in local browser storage; post content and enabled images go directly to your selected AI provider
 
@@ -39,7 +40,7 @@ Quip first identifies what the author is doing—sharing, venting, joking, askin
 1. Download and unzip quip.zip from the latest GitHub Release
 2. Open chrome://extensions and enable Developer mode
 3. Click “Load unpacked” and select the project folder
-4. Open Quip, choose a provider and style, enter your API key, and save
+4. Open Quip, choose a provider, and paste its API key. Settings save automatically
 ```
 
 [Download the latest release](https://github.com/huccct/Quip/releases/latest)
@@ -48,11 +49,11 @@ Quip first identifies what the author is doing—sharing, venting, joking, askin
 
 Open a post on x.com, focus the reply box, and click the **✦** button. Quip writes a draft into the box for you to review and send.
 
-Click again if you want another version.
+Use Shorter, Natural, or Wittier beside the reply box, or click ✦ again for another draft.
 
 ## Roadmap
 
-- [ ] Quick style switching beside the reply box
+- [x] Quick rewrites beside the reply box: Shorter, Natural, or Wittier
 - [ ] Optional hosted credits for people who do not want to bring an API key
 
 <div align="center">

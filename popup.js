@@ -4,6 +4,8 @@ const META = {
   openai:   { name: 'OpenAI',   keys: 'https://platform.openai.com/api-keys',        url: 'https://api.openai.com/v1/chat/completions', model: 'gpt-5-mini', vision: true },
   grok:     { name: 'Grok',     keys: 'https://console.x.ai',                        url: 'https://api.x.ai/v1/chat/completions', model: 'grok-4.3', vision: true },
   claude:   { name: 'Claude',   keys: 'https://console.anthropic.com/settings/keys', url: 'https://api.anthropic.com/v1/messages', model: 'claude-sonnet-5', vision: true },
+  gemini:   { name: 'Gemini',   keys: 'https://aistudio.google.com/app/apikey',       url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', model: 'gemini-3.5-flash-lite', vision: true },
+  openrouter: { name: 'OpenRouter', keys: 'https://openrouter.ai/settings/keys',       url: 'https://openrouter.ai/api/v1/chat/completions', model: 'openrouter/auto', vision: true },
 };
 
 function t(key, ...values) {

@@ -77,6 +77,19 @@ test('gives DeepSeek and Grok enough reasoning to understand posts', async () =>
   assert.equal(grok[0].body.thinking, undefined);
 });
 
+test('uses OpenAI-compatible Gemini and OpenRouter endpoints', async () => {
+  const gemini = [];
+  await load('gemini', gemini)('tweet', [{ url: 'https://example.com/image.jpg', label: '配图' }]);
+  assert.equal(gemini[0].url, 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions');
+  assert.equal(gemini[0].body.model, 'gemini-3.5-flash-lite');
+  assert.equal(gemini[0].body.messages[1].content[2].type, 'image_url');
+
+  const openrouter = [];
+  await load('openrouter', openrouter)('tweet', []);
+  assert.equal(openrouter[0].url, 'https://openrouter.ai/api/v1/chat/completions');
+  assert.equal(openrouter[0].body.model, 'openrouter/auto');
+});
+
 test('applies the selected reply style', async () => {
   const requests = [];
   await load('openai', requests, undefined, 'sharp', 'Indie developer; direct and calm')('tweet', []);
@@ -88,6 +101,15 @@ test('applies the selected reply style', async () => {
   assert.match(requests[0].body.messages[0].content, /我一直、我也经历过、我反正/);
   assert.match(requests[0].body.messages[0].content, /两小时成功预约了下一个两小时/);
   assert.match(requests[0].body.messages[0].content, /中文优先 8–28 字且不超过 40 字/);
+});
+
+test('grounds quick rewrites in the post and current draft', async () => {
+  const requests = [];
+  await load('openai', requests)('<tweet>开会两小时，结论是下次再讨论。</tweet>', [], undefined, 0, 'shorter', '两小时成功预约了下一个两小时');
+  const prompt = requests[0].body.messages;
+  assert.match(prompt[0].content, /明显缩短/);
+  assert.match(prompt[1].content, /开会两小时/);
+  assert.match(prompt[1].content, /<current_draft>[\s\S]*两小时成功预约了下一个两小时/);
 });
 
 test('keeps outer and quoted tweet content separated', () => {
