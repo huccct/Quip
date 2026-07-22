@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.1 — 2026-07-22
+
+### Improvements
+
+- Reduce first-run setup to choosing a model and pasting an API key.
+- Auto-save every setting and move optional controls into a collapsed Personalize section.
+- Preserve image-reading preference while using a model without image support.
+
 ## 0.3.0 — 2026-07-22
 
 ### Features

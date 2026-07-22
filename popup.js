@@ -23,7 +23,6 @@ const providerMenu = document.getElementById('providerMenu');
 const providerOptions = [...document.querySelectorAll('.provider-option')];
 const styleOptions = [...document.querySelectorAll('.style-option')];
 const keyInput = document.getElementById('key');
-const keyLabel = document.getElementById('keyLabel');
 const keyLink = document.getElementById('keyLink');
 const keyToggle = document.getElementById('keyToggle');
 const testConnection = document.getElementById('testConnection');
@@ -32,8 +31,6 @@ const modelInput = document.getElementById('model');
 const voiceInput = document.getElementById('voice');
 const visionSwitch = document.getElementById('visionSwitch');
 const visionSub = document.getElementById('visionSub');
-const save = document.getElementById('save');
-const saveLabel = document.getElementById('saveLabel');
 const status = document.getElementById('status');
 
 let apiKeys = {};
@@ -41,7 +38,6 @@ let modelOverride = {};
 let readImages = false;
 let replyStyle = 'adaptive';
 let activeProvider = 'deepseek';
-let feedbackTimer;
 
 chrome.storage.local.get(['provider', 'apiKeys', 'modelOverride', 'readImages', 'replyStyle', 'voiceProfile'], (r) => {
   apiKeys = r.apiKeys || {};
@@ -60,7 +56,6 @@ function render() {
   providerValue.textContent = m.name;
   providerOptions.forEach((option) => option.setAttribute('aria-selected', String(option.dataset.value === p)));
   styleOptions.forEach((option) => option.setAttribute('aria-checked', String(option.dataset.style === replyStyle)));
-  keyLabel.textContent = m.name + ' API Key';
   keyInput.value = apiKeys[p] || '';
   keyLink.href = m.keys;
   keyLink.textContent = t('getProviderKey', m.name);
@@ -83,6 +78,7 @@ modelInput.addEventListener('input', () => {
   if (META[providerSel.value].vision) {
     visionSub.textContent = t(modelInput.value.trim() ? 'visionCustomModel' : 'visionModelEnabled');
   }
+  saveSettings();
 });
 
 function changeProvider(provider) {
@@ -92,6 +88,7 @@ function changeProvider(provider) {
   activeProvider = provider;
   render();
   setMenuOpen(false);
+  saveSettings();
 }
 
 function setMenuOpen(open) {
@@ -118,7 +115,11 @@ document.addEventListener('keydown', (event) => {
 styleOptions.forEach((option) => option.addEventListener('click', () => {
   replyStyle = option.dataset.style;
   styleOptions.forEach((item) => item.setAttribute('aria-checked', String(item === option)));
+  saveSettings();
 }));
+
+keyInput.addEventListener('input', saveSettings);
+voiceInput.addEventListener('input', saveSettings);
 
 keyToggle.addEventListener('click', () => {
   const show = keyInput.type === 'password';
@@ -132,6 +133,7 @@ visionSwitch.addEventListener('click', () => {
   if (visionSwitch.disabled) return;
   readImages = !readImages;
   visionSwitch.setAttribute('aria-checked', String(readImages));
+  saveSettings();
 });
 
 testConnection.addEventListener('click', async () => {
@@ -140,6 +142,7 @@ testConnection.addEventListener('click', async () => {
   const key = keyInput.value.trim();
   const model = modelInput.value.trim() || cfg.model;
   if (!key) { testLabel.textContent = t('keyRequired'); return; }
+  saveSettings();
 
   testConnection.disabled = true;
   testLabel.textContent = t('testing');
@@ -177,23 +180,17 @@ async function readApiError(response) {
   }
 }
 
-document.getElementById('settings').addEventListener('submit', (event) => {
-  event.preventDefault();
+function saveSettings() {
   const p = providerSel.value;
   apiKeys[p] = keyInput.value.trim();
   modelOverride[p] = modelInput.value.trim();
-  readImages = META[p].vision && readImages;
   const voiceProfile = voiceInput.value.trim().slice(0, 1000);
   chrome.storage.local.set({ provider: p, apiKeys, modelOverride, readImages, replyStyle, voiceProfile }, () => {
-    clearTimeout(feedbackTimer);
-    const failed = chrome.runtime.lastError;
-    save.classList.toggle('error', !!failed);
-    save.classList.toggle('saved', !failed);
-    saveLabel.textContent = t(failed ? 'saveFailed' : 'saved');
-    status.textContent = saveLabel.textContent;
-    feedbackTimer = setTimeout(() => {
-      save.classList.remove('saved', 'error');
-      saveLabel.textContent = t('saveSettings');
-    }, 1600);
+    status.textContent = t(chrome.runtime.lastError ? 'saveFailed' : 'saved');
   });
+}
+
+document.getElementById('settings').addEventListener('submit', (event) => {
+  event.preventDefault();
+  saveSettings();
 });

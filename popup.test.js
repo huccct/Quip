@@ -24,8 +24,8 @@ class Element {
 
 function loadPopup(fetchResponse = { ok: true }, locale = ZH) {
   const ids = Object.fromEntries([
-    'provider', 'providerButton', 'providerValue', 'providerMenu', 'key', 'keyLabel', 'keyLink', 'keyToggle', 'testConnection', 'testLabel', 'model', 'voice', 'visionSwitch',
-    'visionSub', 'save', 'saveLabel', 'status', 'settings',
+    'provider', 'providerButton', 'providerValue', 'providerMenu', 'key', 'keyLink', 'keyToggle', 'testConnection', 'testLabel', 'model', 'voice', 'visionSwitch',
+    'visionSub', 'status', 'settings',
   ].map((id) => [id, new Element()]));
   const options = ['deepseek', 'openai', 'grok', 'claude'].map((value) => {
     const option = new Element();
@@ -68,9 +68,10 @@ function loadPopup(fetchResponse = { ok: true }, locale = ZH) {
   return { ids, options, styles, writes, requests };
 }
 
-test('keeps provider drafts and saves a coherent image setting', () => {
+test('auto-saves provider, style, image, and writing preferences', () => {
   const { ids, options, styles, writes } = loadPopup();
   ids.key.value = 'edited-deep-key';
+  ids.key.listeners.input();
   options[1].listeners.click();
   assert.equal(ids.key.value, 'open-key');
   assert.equal(ids.visionSwitch.attrs['aria-checked'], 'true');
@@ -79,11 +80,12 @@ test('keeps provider drafts and saves a coherent image setting', () => {
   ids.visionSwitch.listeners.click();
   styles[1].listeners.click();
   ids.voice.value = 'Builder; warm but concise';
-  ids.settings.listeners.submit({ preventDefault() {} });
-  assert.equal(writes[0].apiKeys.deepseek, 'edited-deep-key');
-  assert.equal(writes[0].readImages, false);
-  assert.equal(writes[0].replyStyle, 'funny');
-  assert.equal(writes[0].voiceProfile, 'Builder; warm but concise');
+  ids.voice.listeners.input();
+  const saved = writes.at(-1);
+  assert.equal(saved.apiKeys.deepseek, 'edited-deep-key');
+  assert.equal(saved.readImages, false);
+  assert.equal(saved.replyStyle, 'funny');
+  assert.equal(saved.voiceProfile, 'Builder; warm but concise');
 });
 
 test('toggles API Key visibility accessibly', () => {
