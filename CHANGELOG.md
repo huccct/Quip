@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0 — 2026-07-22
+
+### Features
+
+- Preview the exact post, parent conversation, quoted content, and detected image labels Quip read before generating.
+- Replace the outdated mutual-follow landing-page demo with an independent-developer use case.
+
 ## 0.2.5 — 2026-07-22
 
 ### Improvements
