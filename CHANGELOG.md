@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.5 — 2026-07-22
+
+### Improvements
+
+- Enable high-effort thinking for DeepSeek V4 Flash reply generation.
+- Increase DeepSeek's internal token budget while keeping final replies short.
+- Keep API-key connection tests fast by leaving thinking disabled there.
+
 ## 0.2.4 — 2026-07-15
 
 ### Improvements
